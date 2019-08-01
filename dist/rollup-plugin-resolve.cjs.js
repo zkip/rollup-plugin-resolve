@@ -240,7 +240,6 @@ function resolve(
 			rst.isExist = true;
 		}
 	}
-	console.log(rst);
 	return rst;
 }
 
