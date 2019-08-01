@@ -13,11 +13,7 @@ var _glob = _interopDefault(require('glob'));
 
 var preCfg = {
 	sapper: {
-		exclude: [
-			/svelte\/internal/,
-			/\.\/(internal|shared)/,
-			/(@sapper)|svelte/
-		],
+		exclude: [/(svelte\/internal)/, /\.\/(internal|shared)/],
 		basedir: "src",
 		candidateExt: ["js", "svelte"]
 	}
@@ -110,7 +106,7 @@ async function generateCode({ fulId, vId, mode }, codes, options) {
 						}
 						lines.push(`export * from ${JSON.stringify(from)};`);
 					} else if (type === "ExportDefaultDeclaration") {
-						const exported = options.rename(null, file);
+						const exported = options.renamer(null, file);
 						if (exported) {
 							lines.push(
 								`import _${index} from ${JSON.stringify(file)};`
@@ -131,7 +127,7 @@ async function generateCode({ fulId, vId, mode }, codes, options) {
 				}
 				const nameMapping = [];
 				for (const name of namedExports) {
-					const exported = options.rename(name, file);
+					const exported = options.renamer(name, file);
 					if (exported) {
 						nameMapping.push(`${name} as ${exported}`);
 					}
@@ -180,15 +176,33 @@ function genVirtualID(importee, importer) {
 	return path.join(path.dirname(importer), "_" + uid);
 }
 
-function resolve(
-	importee,
-	importer,
-	{ basedir = process.cwd(), candidateExt = ["js"] }
-) {
-	if (!importer) {
-		importer = process.cwd();
+// { rel abs dir file exist }
+function analysisFile(fp) {
+	let rst = { rel: false, abs: false, dir: false, file: false, exist: false };
+	if (fs.existsSync(fp)) {
+		rst.exist = true;
+		if (isDir(fp)) {
+			rst.dir = true;
+		} else {
+			rst.file = true;
+		}
+		if (path.isAbsolute(fp)) {
+			rst.abs = true;
+		} else {
+			rst.rel = true;
+		}
+	}
+	return rst;
+}
+
+function resolve(importee, importer, { basedir, candidateExt }) {
+	if (importer) {
+		let { file } = analysisFile(importer);
+		if (file) {
+			importer = path.dirname(importer);
+		}
 	} else {
-		importer = path.dirname(importer);
+		importer = process.cwd();
 	}
 	let rst = {
 		fulId: "",
@@ -204,7 +218,10 @@ function resolve(
 			rst.fulId = importee.replace("@", basedir);
 		} else if (first(importee) === "{" && last(importee) === "}") {
 			// destructuring mode
-			rst = resolve(importee.slice(1, -1), null, basedir);
+			rst = resolve(importee.slice(1, -1), importer, {
+				basedir,
+				candidateExt
+			});
 			rst.mode = ImportMode.Destructuring;
 		} else if (importee.startsWith("./") || importee.startsWith("../")) {
 			rst.fulId = path.join(importer, importee);
@@ -212,42 +229,83 @@ function resolve(
 	} else {
 		rst.fulId = importee;
 	}
-
-	let ext = path.extname(rst.fulId);
-
-	if (!ext) {
-		if (fs.existsSync(rst.fulId)) {
-			if (isDir(rst.fulId)) {
-				rst.isDir = true;
-				rst.isExist = true;
-			}
+	{
+		let { exist, dir, file } = analysisFile(rst.fulId);
+		let ext = path.extname(rst.fulId);
+		if (dir) {
+			rst.isDir = true;
+			rst.isExist = true;
 		} else {
-			rst.isSupport = false;
-			for (let ext of candidateExt) {
-				let fulId = rst.fulId + "." + ext;
-				if (fs.existsSync(fulId)) {
-					rst.fulId = fulId;
-					rst.isExist = true;
-					rst.isSupport = true;
-					break;
+			if (exist) {
+				if (ext) {
+					if (candidateExt.indexOf(ext.slice(1)) < 0) {
+						rst.isSupport = false;
+					} else {
+						rst.isExist = true;
+					}
+				} else {
+					// A file without extname
+					rst.isSupport = false;
+				}
+			} else {
+				rst.isSupport = false;
+				for (let ext of candidateExt) {
+					let fulId = rst.fulId + "." + ext;
+					if (analysisFile(fulId).exist) {
+						rst.fulId = fulId;
+						rst.isExist = true;
+						rst.isSupport = true;
+						break;
+					}
 				}
 			}
 		}
-	} else {
-		if (candidateExt.indexOf(ext.slice(1)) < 0) {
-			rst.isSupport = false;
-		} else {
-			rst.isExist = true;
-		}
 	}
+	// console.log(rst, importee, "--------------");
 	return rst;
 }
 
+function checkOptions({
+	basedir,
+	renamer = defaultRenamer,
+	candidateExt = ["js"],
+	include,
+	exclude
+}) {
+	let cwd = process.cwd();
+	// basedir
+	if (basedir) {
+		let { exist, rel, dir } = analysisFile(basedir);
+		if (!exist) {
+			console.error(`Option error [basedir]: Not exist.`);
+		} else {
+			if (!dir) {
+				console.error(`Option error [basedir]: Must be a directory.`);
+			}
+			if (rel) {
+				basedir = path.join(cwd, basedir);
+			}
+		}
+	}
+	if (!basedir) {
+		basedir = cwd;
+	}
+
+	// renamer
+	if (typeof renamer !== "function") {
+		console.error(`Option error [renamer]: Must be a function.`);
+	}
+
+	// candidateExt
+	if (candidateExt.constructor !== Array) {
+		console.error(`Option error [candidateExt]: Must be a String Array.`);
+	}
+
+	return { basedir, renamer, candidateExt, include, exclude };
+}
+
 var index = options => {
-	options = Object.assign(
-		{ rename: defaultRenamer, basedir: process.cwd() },
-		options
-	);
+	options = checkOptions(options);
 	const filter = rollupPluginutils.createFilter(options.include, options.exclude);
 	const codes = new Map();
 
@@ -267,7 +325,11 @@ var index = options => {
 			} else if (isDir) {
 				return generateCode.call(
 					this,
-					{ fulId, vId: genVirtualID(fulId, importer), mode },
+					{
+						fulId,
+						vId: genVirtualID(fulId + mode, importer),
+						mode
+					},
 					codes,
 					options
 				);
