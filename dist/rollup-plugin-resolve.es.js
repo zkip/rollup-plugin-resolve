@@ -5,6 +5,18 @@ import { createFilter } from 'rollup-pluginutils';
 import crypto from 'crypto';
 import _glob from 'glob';
 
+var preCfg = {
+	sapper: {
+		exclude: [
+			/svelte\/internal/,
+			/\.\/(internal|shared)/,
+			/(@sapper)|svelte/
+		],
+		basedir: "src",
+		candidateExt: ["js", "svelte"]
+	}
+};
+
 const readFile = promisify(fs.readFile);
 const glob = promisify(_glob);
 
@@ -224,7 +236,7 @@ function resolve(
 	return rst;
 }
 
-module.exports = options => {
+var index = options => {
 	options = Object.assign(
 		{ rename: defaultRenamer, basedir: process.cwd() },
 		options
@@ -261,3 +273,6 @@ module.exports = options => {
 		}
 	};
 };
+
+export default index;
+export { preCfg };

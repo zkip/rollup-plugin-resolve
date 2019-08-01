@@ -1,5 +1,7 @@
 'use strict';
 
+Object.defineProperty(exports, '__esModule', { value: true });
+
 function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
 
 var path = _interopDefault(require('path'));
@@ -8,6 +10,18 @@ var util = require('util');
 var rollupPluginutils = require('rollup-pluginutils');
 var crypto = _interopDefault(require('crypto'));
 var _glob = _interopDefault(require('glob'));
+
+var preCfg = {
+	sapper: {
+		exclude: [
+			/svelte\/internal/,
+			/\.\/(internal|shared)/,
+			/(@sapper)|svelte/
+		],
+		basedir: "src",
+		candidateExt: ["js", "svelte"]
+	}
+};
 
 const readFile = util.promisify(fs.readFile);
 const glob = util.promisify(_glob);
@@ -228,7 +242,7 @@ function resolve(
 	return rst;
 }
 
-module.exports = options => {
+var index = options => {
 	options = Object.assign(
 		{ rename: defaultRenamer, basedir: process.cwd() },
 		options
@@ -265,3 +279,6 @@ module.exports = options => {
 		}
 	};
 };
+
+exports.default = index;
+exports.preCfg = preCfg;

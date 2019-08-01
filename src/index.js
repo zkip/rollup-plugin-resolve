@@ -4,6 +4,7 @@ import { promisify } from "util";
 import { createFilter } from "rollup-pluginutils";
 import crypto from "crypto";
 import _glob from "glob";
+import preCfg from "./preCfg";
 
 const readFile = promisify(fs.readFile);
 const glob = promisify(_glob);
@@ -228,7 +229,7 @@ function resolve(
 	return rst;
 }
 
-module.exports = options => {
+export default options => {
 	options = Object.assign(
 		{ rename: defaultRenamer, basedir: process.cwd() },
 		options
@@ -265,3 +266,5 @@ module.exports = options => {
 		}
 	};
 };
+
+export { preCfg };
