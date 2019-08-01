@@ -82,71 +82,76 @@ async function generateCode({ fulId, vId, mode }, codes, options) {
 	let files = await glob(fulId + "/*");
 	let isDestructuring = mode === ImportMode.Destructuring;
 	const acornOptions = Object.assign({ sourceType: "module" }, options.acorn);
-	const lines = await Promise.all(
-		files.map(async (file, index) => {
-			if (isDir(file)) {
-				if (isDestructuring) {
-					return resolveTreeDep(fulId);
-				} else {
-					return;
-				}
-			} else {
-				const code = await readFile(file, "utf8");
-				const lines = [];
-				const namedExports = [];
-				for (const node of this.parse(code, acornOptions).body) {
-					const { type } = node;
-					if (type === "ExportAllDeclaration") {
-						let from = node.source.value;
-						if (from.startsWith(".")) {
-							from = `./${path
-								.join(path.dirname(file), from)
-								.split(path.sep)
-								.join("/")}`;
-						}
-						lines.push(`export * from ${JSON.stringify(from)};`);
-					} else if (type === "ExportDefaultDeclaration") {
-						const exported = options.renamer(null, file);
-						if (exported) {
+	let code;
+	if (isDestructuring) {
+		code = await resolveTreeDep(fulId);
+	} else {
+		const lines = await Promise.all(
+			files.map(async (file, index) => {
+				if (isDir(file)) ; else {
+					const code = await readFile(file, "utf8");
+					const lines = [];
+					const namedExports = [];
+					for (const node of this.parse(code, acornOptions).body) {
+						const { type } = node;
+						if (type === "ExportAllDeclaration") {
+							let from = node.source.value;
+							if (from.startsWith(".")) {
+								from = `./${path
+									.join(path.dirname(file), from)
+									.split(path.sep)
+									.join("/")}`;
+							}
 							lines.push(
-								`import _${index} from ${JSON.stringify(file)};`
+								`export * from ${JSON.stringify(from)};`
 							);
-							lines.push(`export {_${index} as ${exported}};`);
-						}
-					} else if (type === "ExportNamedDeclaration") {
-						for (const specifier of node.specifiers) {
-							namedExports.push(specifier.exported.name);
-						}
-						if (node.declaration) {
-							for (const declaration of node.declaration
-								.declarations || [node.declaration]) {
-								namedExports.push(declaration.id.name);
+						} else if (type === "ExportDefaultDeclaration") {
+							const exported = options.renamer(null, file);
+							if (exported) {
+								lines.push(
+									`import _${index} from ${JSON.stringify(
+										file
+									)};`
+								);
+								lines.push(
+									`export {_${index} as ${exported}};`
+								);
+							}
+						} else if (type === "ExportNamedDeclaration") {
+							for (const specifier of node.specifiers) {
+								namedExports.push(specifier.exported.name);
+							}
+							if (node.declaration) {
+								for (const declaration of node.declaration
+									.declarations || [node.declaration]) {
+									namedExports.push(declaration.id.name);
+								}
 							}
 						}
 					}
-				}
-				const nameMapping = [];
-				for (const name of namedExports) {
-					const exported = options.renamer(name, file);
-					if (exported) {
-						nameMapping.push(`${name} as ${exported}`);
+					const nameMapping = [];
+					for (const name of namedExports) {
+						const exported = options.renamer(name, file);
+						if (exported) {
+							nameMapping.push(`${name} as ${exported}`);
+						}
 					}
+					if (0 < nameMapping.length) {
+						lines.push(
+							`export {${nameMapping.join(
+								", "
+							)}} from ${JSON.stringify(file)}`
+						);
+					}
+					if (lines.length === 0) {
+						lines.push(`import ${JSON.stringify(file)};`);
+					}
+					return lines.join("\n");
 				}
-				if (0 < nameMapping.length) {
-					lines.push(
-						`export {${nameMapping.join(
-							", "
-						)}} from ${JSON.stringify(file)}`
-					);
-				}
-				if (lines.length === 0) {
-					lines.push(`import ${JSON.stringify(file)};`);
-				}
-				return lines.join("\n");
-			}
-		})
-	);
-	let code = lines.join("\n");
+			})
+		);
+		code = lines.join("\n");
+	}
 	codes.set(vId, code);
 	return vId;
 }
