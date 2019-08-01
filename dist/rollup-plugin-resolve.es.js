@@ -213,6 +213,7 @@ function resolve(
 		if (fs.existsSync(rst.fulId)) {
 			if (isDir(rst.fulId)) {
 				rst.isDir = true;
+				rst.isExist = true;
 			}
 		} else {
 			rst.isSupport = false;
@@ -233,6 +234,7 @@ function resolve(
 			rst.isExist = true;
 		}
 	}
+	console.log(rst);
 	return rst;
 }
 

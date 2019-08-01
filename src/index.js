@@ -204,6 +204,7 @@ function resolve(
 		if (fs.existsSync(rst.fulId)) {
 			if (isDir(rst.fulId)) {
 				rst.isDir = true;
+				rst.isExist = true;
 			} else {
 				// A file without extname
 			}
@@ -226,6 +227,7 @@ function resolve(
 			rst.isExist = true;
 		}
 	}
+	console.log(rst);
 	return rst;
 }
 
