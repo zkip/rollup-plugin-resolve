@@ -1,0 +1,28 @@
+{
+  "name": "@zrlps/rollup-plugin-resolve",
+  "version": "0.0.1",
+  "description": "Resolve plugin for rollupjs.",
+  "main": "dist/rollup-plugin-resolve.cjs.js",
+  "module": "dist/rollup-plugin-resolve.es.js",
+  "jsnext:main": "dist/rollup-plugin-node-resolve.es.js",
+  "dependencies": {
+    "builtin-modules": "^3.1.0",
+    "glob": "^7.1.4",
+    "rollup-pluginutils": "^2.8.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zrlps/rollup-plugin-resolve.git"
+  },
+  "keywords": [],
+  "author": "zkip <zkiplan@qq.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/zrlps/rollup-plugin-resolve/issues"
+  },
+  "homepage": "https://github.com/zrlps/rollup-plugin-resolve#readme"
+}
