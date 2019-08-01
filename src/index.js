@@ -162,32 +162,70 @@ function genVirtualID(importee, importer) {
 	return path.join(path.dirname(importer), "_" + uid);
 }
 
-function resolve(importee, importer, basedir) {
+function resolve(
+	importee,
+	importer,
+	{ basedir = process.cwd(), candidateExt = ["js"] }
+) {
 	if (!importer) {
 		importer = process.cwd();
 	} else {
 		importer = path.dirname(importer);
 	}
+	let rst = {
+		fulId: "",
+		mode: ImportMode.Normal,
+		isSupport: true,
+		isDir: false,
+		isExist: false
+	};
 	if (!path.isAbsolute(importee)) {
 		if (importee.startsWith("~/")) {
-			return [importee.replace("~", process.env.HOME), ImportMode.Normal];
+			rst.fulId = importee.replace("~", process.env.HOME);
 		} else if (importee.startsWith("@/")) {
-			return [importee.replace("@", basedir), ImportMode.Normal];
+			rst.fulId = importee.replace("@", basedir);
 		} else if (first(importee) === "{" && last(importee) === "}") {
 			// destructuring mode
-			return [
-				resolve(importee.slice(1, -1), null, basedir)[0],
-				ImportMode.Destructuring
-			];
+			rst = resolve(importee.slice(1, -1), null, basedir);
+			rst.mode = ImportMode.Destructuring;
 		} else if (importee.startsWith("./") || importee.startsWith("../")) {
-			return [path.join(importer, importee), ImportMode.Normal];
+			rst.fulId = path.join(importer, importee);
 		} else {
 			// resolve from node_modules
-			return ["", ImportMode.Normal];
 		}
 	} else {
-		return [importee, ImportMode.Normal];
+		rst.fulId = importee;
 	}
+
+	let ext = path.extname(rst.fulId);
+
+	if (!ext) {
+		if (fs.existsSync(rst.fulId)) {
+			if (isDir(rst.fulId)) {
+				rst.isDir = true;
+			} else {
+				// A file without extname
+			}
+		} else {
+			rst.isSupport = false;
+			for (let ext of candidateExt) {
+				let fulId = rst.fulId + "." + ext;
+				if (fs.existsSync(fulId)) {
+					rst.fulId = fulId;
+					rst.isExist = true;
+					rst.isSupport = true;
+					break;
+				}
+			}
+		}
+	} else {
+		if (candidateExt.indexOf(ext.slice(1)) < 0) {
+			rst.isSupport = false;
+		} else {
+			rst.isExist = true;
+		}
+	}
+	return rst;
 }
 
 module.exports = options => {
@@ -197,28 +235,29 @@ module.exports = options => {
 	);
 	const filter = createFilter(options.include, options.exclude);
 	const codes = new Map();
+
 	return {
-		name: "glob-import",
+		name: "resolve",
 		async resolveId(importee, importer) {
 			if (!filter(importee)) {
 				return null;
 			}
-			let [fulId, mode] = resolve(importee, importer, options.basedir);
-			try {
-				if (fulId === "") {
-					return null;
-				} else if (isDir(fulId)) {
-					return generateCode.call(
-						this,
-						{ fulId, vId: genVirtualID(fulId, importer), mode },
-						codes,
-						options
-					);
-				} else {
-					return fulId;
-				}
-			} catch (error) {
+			let { fulId, mode, isDir, isExist, isSupport } = resolve(
+				importee,
+				importer,
+				options
+			);
+			if (fulId === "" || !isSupport || !isExist) {
 				return null;
+			} else if (isDir) {
+				return generateCode.call(
+					this,
+					{ fulId, vId: genVirtualID(fulId, importer), mode },
+					codes,
+					options
+				);
+			} else {
+				return fulId;
 			}
 		},
 		load(id) {
