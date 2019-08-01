@@ -1,6 +1,6 @@
 {
   "name": "@zrlps/rollup-plugin-resolve",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Resolve plugin for rollupjs.",
   "main": "dist/rollup-plugin-resolve.cjs.js",
   "module": "dist/rollup-plugin-resolve.es.js",
