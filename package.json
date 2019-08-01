@@ -6,7 +6,6 @@
   "module": "dist/rollup-plugin-resolve.es.js",
   "jsnext:main": "dist/rollup-plugin-node-resolve.es.js",
   "dependencies": {
-    "builtin-modules": "^3.1.0",
     "glob": "^7.1.4",
     "rollup-pluginutils": "^2.8.1"
   },
@@ -18,7 +17,10 @@
     "type": "git",
     "url": "git+https://github.com/zrlps/rollup-plugin-resolve.git"
   },
-  "keywords": [],
+  "keywords": [
+    "rollup-plugin",
+    "resolve"
+  ],
   "author": "zkip <zkiplan@qq.com>",
   "license": "ISC",
   "bugs": {
