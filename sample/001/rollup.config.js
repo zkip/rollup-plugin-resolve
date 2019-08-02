@@ -1,4 +1,4 @@
-const resolve = require("../..");
+const resolve = require("../..").default;
 
 export default {
 	input: "input.js",

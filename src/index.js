@@ -30,11 +30,17 @@ async function resolveTreeDep(fp) {
 				await genModulePathName(f);
 			}
 		} else {
-			let { dirname, basename, join } = path;
+			let { dirname, basename, extname, join } = path;
 			let rel = path.relative(_fp, fp);
-			m[
-				join(dirname(rel), basename(rel, ".js")).replace(/\//g, "_")
-			] = fp;
+
+			// escape the separator charactor '_' and ‘$'
+			// the '-' is a special charactor to describe the hierarchical
+			let raw = join(dirname(rel), basename(rel, extname(rel)));
+			let name = raw.replace(/\$/g, "$$$");
+			name = name.replace(/_{1}/g, "__");
+			// the "$_" was be used separate the path
+			name = name.replace(/\-|\//g, "$_");
+			m[name] = fp;
 		}
 	}
 	await genModulePathName(fp);
@@ -43,13 +49,16 @@ async function resolveTreeDep(fp) {
 		function _set(o, ks) {
 			if (ks.length > 1) {
 				let k = ks.shift();
+				// recovery to escape before
+				k = k.replace(/__/g, "_");
+				k = k.replace(/\${2}/g, "$$");
 				o[k] || (o[k] = {});
 				_set(o[k], ks);
 			} else {
 				o[last(ks)] = v;
 			}
 		}
-		_set(o, p.split("_"));
+		_set(o, p.split(/\$_/g));
 	}
 
 	let pkg = {};
@@ -300,12 +309,10 @@ function checkOptions({
 	return { basedir, renamer, candidateExt, include, exclude };
 }
 
-export default options => {
+export default (options = {}) => {
 	options = checkOptions(options);
 	const filter = createFilter(options.include, options.exclude);
 	const codes = new Map();
-
-	const count = 0;
 
 	return {
 		name: "resolve",
