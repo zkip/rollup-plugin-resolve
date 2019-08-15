@@ -3,6 +3,11 @@ Resolve plugin for rollupjs.
 
 # Extended ES import grammer
 
++ Alias
++ Group
++ HOME and Root
++ Integration
+
 ### Alias import
 
 The file structure like this:
@@ -12,12 +17,7 @@ project
 	rollup.config.js
 	src
         util
-            arr
-                side.js
-                turn.js
-            obj
-                assign.js
-                by.js
+        	...
 		app
 			main.js
 ```
