@@ -266,7 +266,6 @@ function resolve(importee, importer, { basedir, candidateExt }) {
 			}
 		}
 	}
-	// console.log(rst, importee, "--------------");
 	return rst;
 }
 
