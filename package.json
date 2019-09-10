@@ -26,5 +26,6 @@
   "bugs": {
     "url": "https://github.com/zrlps/rollup-plugin-resolve/issues"
   },
-  "homepage": "https://github.com/zrlps/rollup-plugin-resolve#readme"
+  "homepage": "https://github.com/zrlps/rollup-plugin-resolve#readme",
+  "readme": "README.md"
 }
