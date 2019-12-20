@@ -15,11 +15,13 @@
 		"rollup": "^1.27.13"
 	},
 	"scripts": {
-		"ci:coverage": "nyc pnpm run test && nyc report --reporter=text-lcov > coverage.lcov",
+		"clean": "rm -rf dist .nyc_output",
+		"prepare": "npm run build",
+		"ci:coverage": "nyc npm run test && nyc report --reporter=text-lcov > coverage.lcov",
 		"build": "rollup -c",
-		"test": "ava",
-		"coverage": "nyc pnpm run test",
-		"pretest": "pnpm run build"
+		"test": "ava --watch",
+		"coverage": "nyc npm run test",
+		"pretest": "npm run build"
 	},
 	"repository": {
 		"type": "git",
@@ -31,7 +33,8 @@
 	],
 	"ava": {
 		"files": [
-			"!**/fixtures/**"
+			"test/**",
+			"!test/fixtures/**"
 		]
 	},
 	"author": "zkip <zkiplan@qq.com>",
