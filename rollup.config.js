@@ -5,12 +5,14 @@ export default {
 		{
 			file: "dist/rollup-plugin-resolve.cjs.js",
 			format: "cjs",
-			exports: "named"
+			exports: "named",
+			sourcemap: true,
 		},
 		{
 			file: "dist/rollup-plugin-resolve.es.js",
 			format: "es",
-			exports: "named"
+			exports: "named",
+			sourcemap: true,
 		}
 	]
 };
