@@ -2,8 +2,6 @@
 
 Resolve plugin for rollupjs.
 
-[![Build Status](https://img.shields.io/travis/xcatliu/pagic.svg)](https://travis-ci.org/xcatliu/pagic)
-
 这个插件让你可以定义一个项目的起点，使得你可以拥有额外的搜寻文件的模式。
 它提供了：
 
