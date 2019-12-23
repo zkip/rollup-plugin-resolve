@@ -81,7 +81,7 @@ project
 import { timeout, group, some } from "./util/Async/*";
 import { 老子之道 } from "./util/Tricks/*";
 import { A } from "./util/B";
-A; // [...]
+A; // () => {...}
 ```
 
 ### HOME and Root import
