@@ -1,46 +1,86 @@
 import test from "ava";
 import { join } from "path";
 import { rollup } from "rollup";
-import { parse } from "acorn";
+import { testBundle } from "../../util/test";
 
 import resolve from "../..";
 
-const iOpt = {
-  plugins: [resolve()]
-};
-
-const oOpt = {
-  format: "cjs"
-};
-
 process.chdir(join(__dirname, "../fixtures/base"));
+test("[base option: default] normal", async t => {
+  const bundle = await rollup({
+    plugins: [resolve()],
+    input: "main.js"
+  });
+  let { result } = await testBundle(t, bundle);
+  t.deepEqual(result, {
+    answer: 80
+  });
+});
+test("[base option: default] navigator", async t => {
+  const bundle = await rollup({
+    plugins: [
+      resolve({
+        base: "y"
+      })
+    ],
+    input: "main.js"
+  });
+  let { result } = await testBundle(t, bundle);
+  t.deepEqual(result, {
+    answer: 80
+  });
+});
+test("[base option: specified] normal", async t => {
+  const bundle = await rollup({
+    plugins: [
+      resolve({
+        base: "y"
+      })
+    ],
+    input: "main.js"
+  });
+  let { result } = await testBundle(t, bundle);
+  t.deepEqual(result, {
+    answer: 80
+  });
+});
+test("[base option: specified, relative] navigator", async t => {
+  const bundle = await rollup({
+    plugins: [
+      resolve({
+        base: "y"
+      })
+    ],
+    input: "main.js"
+  });
+  let { result } = await testBundle(t, bundle);
+  t.deepEqual(result, {
+    answer: 80
+  });
+});
+test("[base option: specified, absolute] navigator", async t => {
+  const bundle = await rollup({
+    plugins: [
+      resolve({
+        base: "y"
+      })
+    ],
+    input: "main.js"
+  });
+  let { result } = await testBundle(t, bundle);
+  t.deepEqual(result, {
+    answer: 80
+  });
+});
 
-function check(code) {
-  let { body } = parse(code);
-  return {
-    find() {},
-    same() {}
-  };
-}
-
-test("[base] default option", async t => {
-  const bundle = await rollup({ plugins: [resolve()], input: "main.js" });
-  let chunk = await bundle.generate(oOpt);
-  let [{ code }] = chunk.output;
-  let expectCode = `{
-	  waitTime: 1500,
-	}`;
-  let { find, same } = check(code);
-  if (find("/config") && same("/config", expectCode)) {
-    t.pass();
-  }
-  console.log(code, "");
-  //   for (let node of body) {
-  //     let { type } = node;
-  //     console.log(type, type === "VariableDeclaration");
-  //     if (type === "VariableDeclaration") {
-  //       console.log(":::::::::::::", node.declarations);
-  //     }
-  //   }
-  // console.log(await bundle.generate({ format: 'cjs' }))
+process.chdir(join(__dirname, "../fixtures/base_width_relative"));
+test("[base] with relative navigator", async t => {
+  const bundle = await rollup({
+    plugins: [resolve()],
+    input: "main.js"
+  });
+  let { result } = await testBundle(t, bundle);
+  t.deepEqual(result, {
+    answer: 97
+  });
 });
