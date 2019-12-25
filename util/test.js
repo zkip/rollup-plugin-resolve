@@ -40,9 +40,7 @@ const testBundle = async (t, bundle, args = {}) => {
     "require",
     "t",
     ...Object.keys(args)
-  ].concat(
-    `process.chdir('${process.cwd()}'); let result;\n\n${code}\n\nreturn result;`
-  );
+  ].concat(`let result;\n\n${code}\n\nreturn result;`);
 
   // eslint-disable-next-line no-new-func
   const func = new Function(...params);
