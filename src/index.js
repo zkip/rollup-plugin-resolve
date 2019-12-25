@@ -4,8 +4,9 @@ import _glob from "glob";
 import path from "path";
 import { createFilter } from "rollup-pluginutils";
 import { promisify } from "util";
+import { isDir, analysisFile } from "./util";
 
-import preCfg from "./preCfg";
+import preConfig from "./preConfig";
 
 const readFile = promisify(fs.readFile);
 const glob = promisify(_glob);
@@ -21,59 +22,6 @@ const defaultRenamer = (name, id) => {
   );
 };
 
-async function resolveTreeDep(fp) {
-  let m = {}; // name : fullpath
-  let _fp = fp;
-  async function genModulePathName(fp) {
-    if (isDir(fp)) {
-      for (let f of await glob(fp + "/*")) {
-        await genModulePathName(f);
-      }
-    } else {
-      let { dirname, basename, extname, join } = path;
-      let rel = path.relative(_fp, fp);
-
-      // escape the separator charactor '_' and ‘$'
-      // the '-' is a special charactor to describe the hierarchical
-      let raw = join(dirname(rel), basename(rel, extname(rel)));
-      let name = raw.replace(/\$/g, "$$$");
-      name = name.replace(/_{1}/g, "__");
-      // the "$_" was be used separate the path
-      name = name.replace(/\-|\//g, "$_");
-      m[name] = fp;
-    }
-  }
-  await genModulePathName(fp);
-
-  function setByPath(o, v, p) {
-    function _set(o, ks) {
-      if (ks.length > 1) {
-        let k = ks.shift();
-        // recovery to escape before
-        k = k.replace(/__/g, "_");
-        k = k.replace(/\${2}/g, "$$");
-        o[k] || (o[k] = {});
-        _set(o[k], ks);
-      } else {
-        o[last(ks)] = v;
-      }
-    }
-    _set(o, p.split(/\$_/g));
-  }
-
-  let pkg = {};
-  let ls = [];
-  for (let name in m) {
-    setByPath(pkg, name, name);
-    ls.push(`import ${name} from "${m[name]}";`);
-  }
-  let pkg_s = JSON.stringify(pkg).replace(/[""]/g, "");
-  ls.push("const rst=" + pkg_s + ";");
-  ls.push("export default rst;");
-
-  return ls.join("\n");
-}
-
 async function generateCode({ fulId, vId, mode }, codes, options) {
   let files = await glob(fulId + "/*");
   let isDestructuring = mode === ImportMode.Destructuring;
@@ -83,11 +31,11 @@ async function generateCode({ fulId, vId, mode }, codes, options) {
     code = await resolveTreeDep(fulId);
   } else {
     const lines = await Promise.all(
-      files.map(async (file, index) => {
-        if (isDir(file)) {
+      files.map(async (fp, index) => {
+        if (isDir(fp)) {
           // ignore
         } else {
-          const code = await readFile(file, "utf8");
+          const code = await readFile(fp, "utf8");
           const lines = [];
           const namedExports = [];
           for (const node of this.parse(code, acornOptions).body) {
@@ -96,15 +44,15 @@ async function generateCode({ fulId, vId, mode }, codes, options) {
               let from = node.source.value;
               if (from.startsWith(".")) {
                 from = `./${path
-                  .join(path.dirname(file), from)
+                  .join(path.dirname(fp), from)
                   .split(path.sep)
                   .join("/")}`;
               }
               lines.push(`export * from ${JSON.stringify(from)};`);
             } else if (type === "ExportDefaultDeclaration") {
-              const exported = options.renamer(null, file);
+              const exported = options.renamer(null, fp);
               if (exported) {
-                lines.push(`import _${index} from ${JSON.stringify(file)};`);
+                lines.push(`import _${index} from ${JSON.stringify(fp)};`);
                 lines.push(`export {_${index} as ${exported}};`);
               }
             } else if (type === "ExportNamedDeclaration") {
@@ -122,18 +70,18 @@ async function generateCode({ fulId, vId, mode }, codes, options) {
           }
           const nameMapping = [];
           for (const name of namedExports) {
-            const exported = options.renamer(name, file);
+            const exported = options.renamer(name, fp);
             if (exported) {
               nameMapping.push(`${name} as ${exported}`);
             }
           }
           if (0 < nameMapping.length) {
             lines.push(
-              `export {${nameMapping.join(", ")}} from ${JSON.stringify(file)}`
+              `export {${nameMapping.join(", ")}} from ${JSON.stringify(fp)}`
             );
           }
           if (lines.length === 0) {
-            lines.push(`import ${JSON.stringify(file)};`);
+            lines.push(`import ${JSON.stringify(fp)};`);
           }
           return lines.join("\n");
         }
@@ -143,18 +91,6 @@ async function generateCode({ fulId, vId, mode }, codes, options) {
   }
   codes.set(vId, code);
   return vId;
-}
-
-function isDir(fp) {
-  return fs.statSync(fp).isDirectory();
-}
-
-function last(s) {
-  return s[s.length - 1];
-}
-
-function first(s) {
-  return s[0];
 }
 
 const ImportMode = {
@@ -170,26 +106,7 @@ function genVirtualID(importee, importer) {
   return path.join(path.dirname(importer), "_" + uid);
 }
 
-// { rel abs dir file exist }
-function analysisFile(fp) {
-  let rst = { rel: false, abs: false, dir: false, file: false, exist: false };
-  if (fs.existsSync(fp)) {
-    rst.exist = true;
-    if (isDir(fp)) {
-      rst.dir = true;
-    } else {
-      rst.file = true;
-    }
-    if (path.isAbsolute(fp)) {
-      rst.abs = true;
-    } else {
-      rst.rel = true;
-    }
-  }
-  return rst;
-}
-
-function resolve(importee, importer, { basedir, candidateExt }) {
+function resolve(importee, importer, { base, candidateExt }) {
   if (importer) {
     let { file } = analysisFile(importer);
     if (file) {
@@ -205,14 +122,20 @@ function resolve(importee, importer, { basedir, candidateExt }) {
     isDir: false,
     isExist: false
   };
+
   if (!path.isAbsolute(importee)) {
     if (importee.startsWith("~/")) {
+      // $HOME and /
       rst.fulId = importee.replace("~", process.env.HOME);
     } else if (importee.startsWith("@/")) {
-      rst.fulId = importee.replace("@", basedir);
-    } else if (first(importee) === "{" && last(importee) === "}") {
-      // destructuring mode
-      rst = resolve(importee.slice(1, -1), importer, { basedir, candidateExt });
+      // base
+      rst.fulId = importee.replace("@", base);
+    } else if (importee.startsWith("{") && importee.endsWith("}")) {
+      // intergration
+      rst = resolve(importee.slice(1, -1), importer, {
+        base,
+        candidateExt
+      });
       rst.mode = ImportMode.Destructuring;
     } else if (importee.startsWith("./") || importee.startsWith("../")) {
       rst.fulId = path.join(importer, importee);
@@ -222,6 +145,7 @@ function resolve(importee, importer, { basedir, candidateExt }) {
   } else {
     rst.fulId = importee;
   }
+
   {
     let { exist, dir, file } = analysisFile(rst.fulId);
     let ext = path.extname(rst.fulId);
@@ -258,16 +182,17 @@ function resolve(importee, importer, { basedir, candidateExt }) {
 }
 
 function checkOptions({
-  basedir,
-  renamer = defaultRenamer,
+  base,
   candidateExt = ["js"],
+  varialbles = {},
+  renamer = defaultRenamer,
   include,
   exclude
 }) {
   let cwd = process.cwd();
   // basedir
-  if (basedir) {
-    let { exist, rel, dir } = analysisFile(basedir);
+  if (base) {
+    let { exist, rel, dir } = analysisFile(base);
     if (!exist) {
       console.error(`Option error [basedir]: Not exist.`);
     } else {
@@ -275,12 +200,12 @@ function checkOptions({
         console.error(`Option error [basedir]: Must be a directory.`);
       }
       if (rel) {
-        basedir = path.join(cwd, basedir);
+        base = path.join(cwd, base);
       }
     }
   }
-  if (!basedir) {
-    basedir = cwd;
+  if (!base) {
+    base = cwd;
   }
 
   // renamer
@@ -293,10 +218,8 @@ function checkOptions({
     console.error(`Option error [candidateExt]: Must be a String Array.`);
   }
 
-  return { basedir, renamer, candidateExt, include, exclude };
+  return { base, renamer, candidateExt, include, exclude };
 }
-
-function test_resolve(importee, importer) {}
 
 export default (options = {}) => {
   options = checkOptions(options);
@@ -305,14 +228,6 @@ export default (options = {}) => {
 
   return {
     name: "resolve",
-    // async resolveId(importee, importer) {
-    //   test_resolve(importee, importer);
-
-    //   if (importee.startsWith('@')) {
-    //     console.log(importee, '___***', options)
-    //     return importee.replace('@', options.basedir) + '.js'
-    //   }
-    // },
     async resolveId(importee, importer) {
       if (!filter(importee)) {
         return null;
@@ -341,4 +256,4 @@ export default (options = {}) => {
   };
 };
 
-export { preCfg };
+export { preConfig };
