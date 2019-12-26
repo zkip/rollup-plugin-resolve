@@ -6,9 +6,6 @@ import { copySync, ensureDirSync, removeSync } from "fs-extra";
 
 import resolve from "../..";
 
-// console.log(__dirname, "______***\n", process.cwd());
-// console.log(join(__dirname, "../fixtures/base"), "::::::");
-
 process.chdir(join(__dirname, "../fixtures/base"));
 
 function gen(t) {
