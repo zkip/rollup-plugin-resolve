@@ -1,5 +1,5 @@
 import { promisify } from "util";
-import { validIdent, setByPath, isDir, dualEach } from "./util"
+import { validIdent, setByPath, isDir, dualEach } from "./util";
 import { join, normalize, dirname, relative, basename, extname } from "path";
 import genExportAnalyzer from "./genExportAnalyzer";
 
@@ -26,8 +26,7 @@ export default function genVirtuaGrouplModuleMaker() {
 		if (module) return module;
 
 		// The keypath must be valid.
-		const
-			m_id_kp = {
+		const m_id_kp = {
 				/* id: keypath */
 			},
 			m_kp_id = {
@@ -41,34 +40,38 @@ export default function genVirtuaGrouplModuleMaker() {
 			},
 			m_f_ids = {
 				/* filepath: id [] */
+			},
+			m_id_f = {
+				/* id: filepath */
 			};
+
+		const m_empty_id_kp = {};
 
 		let count = 0;
 		const genID = () => `_${count++}`;
 
 		const filepaths = await glob(join(fp, isIntergration ? "/**" : "/*"));
 
-
 		const id_imported = new Set();
+
+		const dir_kps = [];
 
 		for (let f of filepaths) {
 			if (normalize(f) === normalize(fp)) continue;
 
-			let dir_name = dirname(f);
-			let is_dir = isDir(f);
-			let dir_name_kp = relative(fp, dir_name) || "/"
-
-			console.log(dir_name, dir_name_kp, "@@@@@@@@@@")
+			const dir_name = dirname(f);
+			const filename = basename(f, extname(f));
+			const is_dir = isDir(f);
+			const kp = relative(fp, is_dir ? f : join(dir_name, filename));
 
 			if (!is_dir) {
-				if (validKeyPath(dir_name_kp)) {
+				// console.log(f, "@@@@@@@@@@@", dir_name_kp);
+				if (validKeyPath(kp)) {
 					const exports = await getFlatExports(f);
 					const ids = m_f_ids[f] || new Set();
 
 					m_f_exports[f] = exports;
 					m_f_ids[f] = ids;
-
-					const filename = basename(f, extname(f));
 
 					if (validKeyPath(filename)) {
 						const kp = relative(fp, join(dir_name, filename));
@@ -77,11 +80,10 @@ export default function genVirtuaGrouplModuleMaker() {
 						if (!m_kp_id[kp]) {
 							const id = genID();
 
-							if (!id_imported.has(id)) {
-								id_imported.add(id);
-								ids.add(id);
-							}
+							id_imported.add(id);
+							ids.add(id);
 
+							m_id_f[id] = f;
 							m_kp_id[kp] = id;
 							m_id_kp[id] = kp;
 							m_id_isDefault[id] = true;
@@ -95,9 +97,11 @@ export default function genVirtuaGrouplModuleMaker() {
 							// named export has a higher priority
 							const id = m_kp_id[kp] || genID();
 
-							if (!id_imported.has(id)) {
-								id_imported.add(id);
-								ids.add(id);
+							ids.add(id);
+							id_imported.add(id);
+							if (id_imported.has(id)) {
+								let f = m_id_f[id];
+								m_f_ids[f].delete(id);
 							}
 
 							m_kp_id[kp] = id;
@@ -108,8 +112,21 @@ export default function genVirtuaGrouplModuleMaker() {
 				} else {
 				}
 			} else {
+				dir_kps.push(kp);
 			}
 		}
+
+		const finalKps = nIntersection(
+			filterFinalKeyPath([...dir_kps, ...Object.values(m_id_kp)]),
+			dir_kps
+		);
+
+		finalKps.map(kp => {
+			if (kp.split("/").length === 1) {
+				const id = genID();
+				m_empty_id_kp[id] = kp;
+			}
+		});
 
 		// Generate the code of virtual-module.
 		const lines = [];
@@ -150,12 +167,30 @@ export default function genVirtuaGrouplModuleMaker() {
 			setByPath(summary, id, kp);
 		});
 
-		console.log(m_id_kp, "lllllllllllll");
+		const exports_empty = [];
+		dualEach(m_empty_id_kp)((id, kp) => {
+			if (kp.split("/").length === 1) {
+				exports_empty.push([id, kp]);
+			}
+			setByPath(summary, id, kp);
+		});
 
+		const exports_empty_raw = exports_empty
+			.map(([id, kp]) => `${id} = {}`)
+			.join(",");
+
+		const empty_defintion =
+			exports_empty_raw === "" ? "" : `const ${exports_empty_raw};\n`;
+
+		exports_named.push(...exports_empty);
 		const exports_named_raw = exports_named
 			.map(([id, kp]) => `${id} as ${kp}`)
 			.join(", ");
-		const code_named_exports = `export { ${exports_named_raw} };`;
+
+		const code_named_exports =
+			exports_named_raw === ""
+				? ""
+				: `export { ${exports_named_raw} };\n`;
 
 		const code_import = lines.join("\n");
 
@@ -164,17 +199,18 @@ export default function genVirtuaGrouplModuleMaker() {
 			`"$1": $2`
 		);
 
-		const code_default_export = `export default ${pkg_raw};`;
+		const code_default_export = `export default ${pkg_raw};\n`;
 
 		const code = [
 			code_import,
+			empty_defintion,
 			code_default_export,
 			code_named_exports
-		].join("\n\n");
+		].join("\n");
 
 		module = { code };
 
-		console.log(module)
+		console.log(module);
 
 		return isIntergration
 			? (cache_intergration[fp] = module)
@@ -184,4 +220,41 @@ export default function genVirtuaGrouplModuleMaker() {
 
 function validKeyPath(kp) {
 	return kp.split("/").reduce((t, k) => validIdent(k) && t, true);
+}
+
+function filterFinalKeyPath(kps) {
+	return kps.filter(kp =>
+		kps.reduce((ok, kpa) => ok && (kp === kpa || !kpa.startsWith(kp)), true)
+	);
+}
+
+function nIntersection(...arrs) {
+	const ok = new Map();
+	const result = [];
+	for (let arr1 of arrs) {
+		for (let arr2 of arrs) {
+			if (arr1 === arr2) continue;
+
+			let left = arr1.length > arr2.length;
+			let arr = left ? arr1 : arr2;
+			let arra = left ? arr2 : arr1;
+
+			for (let v of arr) {
+				if (!ok.has(v)) {
+					ok.set(v, true);
+				} else if (!ok.get(v)) {
+					continue;
+				}
+				if (!arra.includes(v)) {
+					ok.set(v, false);
+				}
+			}
+		}
+	}
+	for (let [k, b] of ok.entries()) {
+		if (b) {
+			result.push(k);
+		}
+	}
+	return result;
 }

@@ -1,3 +1,5 @@
-import f from "{./a}"
+import f from "{./a}";
+import { b, c } from "{./a}";
 
-console.log(f)
+console.log(f, b, c);
+export { f as result };

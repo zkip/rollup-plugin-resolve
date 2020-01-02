@@ -1,18 +1,19 @@
 import test from "ava";
 import { rollup } from "rollup";
-import resolve from "../.."
+import resolve from "../..";
 import { join } from "path";
-import { testBundle } from "../../util/test"
+import { testBundle } from "../../util/test";
 
 process.chdir(join(process.cwd(), "test/fixtures/sample"));
 
 test("run", async t => {
 	const bundle = await rollup({
 		plugins: [resolve()],
-		input: 'main.js'
+		input: "main.js"
 	});
 
 	let { result, module } = await testBundle(t, bundle);
-	console.log(result, module.exports)
+	console.log(result, module);
+	// console.log(await testBundle(t, bundle));
 	// console.log(bundle)
 });
