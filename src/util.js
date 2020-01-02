@@ -1,25 +1,29 @@
 import fs from "fs";
-import path from "path";
+import isVarName from "is-var-name"
 
-export function isDir(fp) {
-  return fs.statSync(fp).isDirectory();
+export const isDir = fp => fs.statSync(fp).isDirectory()
+export const isExists = fp => fs.existsSync(fp)
+
+export function setByPath(obj, val, path) {
+	function _set(o, ks) {
+		if (ks.length > 1) {
+			let k = ks.shift();
+			o[k] || (o[k] = {});
+			_set(o[k], ks);
+		} else {
+			o[last(ks)] = val;
+		}
+	}
+	_set(obj, path.split(/\//g));
 }
 
-// FilePath : { rel abs dir file exist }bool
-export function analysisFile(fp) {
-  let rst = { rel: false, abs: false, dir: false, file: false, exist: false };
-  if (fs.existsSync(fp)) {
-    rst.exist = true;
-    if (isDir(fp)) {
-      rst.dir = true;
-    } else {
-      rst.file = true;
-    }
-    if (path.isAbsolute(fp)) {
-      rst.abs = true;
-    } else {
-      rst.rel = true;
-    }
-  }
-  return rst;
+
+export function validIdent(ident) {
+	return isVarName(ident);
 }
+
+export const last = arraylike => arraylike[arraylike.length - 1];
+
+export const first = arraylike => arraylike[0]
+
+export const dualEach = o => fn => Object.entries(o).forEach(([k, v]) => fn(k, v));
