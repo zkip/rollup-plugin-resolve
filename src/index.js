@@ -2,7 +2,7 @@ import crypto from "crypto";
 import path, { isAbsolute, normalize } from "path";
 import { join, dirname, resolve } from "path";
 import { createFilter } from "rollup-pluginutils";
-import { isDir, isExists } from "./util";
+import { isDir, isExists, tryResolve } from "./util";
 import checkOptions from "./checkOptions";
 
 import preConfig from "./preConfig";
@@ -112,19 +112,6 @@ const ImportMode = {
 
 const isES6DirExport = dirpath => isExists(join(dirpath, "index.js"))
 
-const defaultCandidateExt = ["js"]
-
-const hitTarget = (target = "", candidateExt = defaultCandidateExt) => {
-	for (const ext of candidateExt) {
-		const fullfp = target + "." + ext
-		if (isExists(fullfp)) {
-			return fullfp;
-		}
-	}
-
-	return null;
-}
-
 /*
 mode:
 	N Normal
@@ -177,9 +164,10 @@ export default (options = {}) => {
 					return genVirtualID(fullfp, "C")
 				}
 			} else {
-				return hitTarget(fullfp, candidateExt)
+				return tryResolve(fullfp, candidateExt)
 			}
 
+			return null;
 		},
 		async load(id) {
 			let ret = parseVirtualID(id);

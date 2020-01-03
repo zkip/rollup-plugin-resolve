@@ -26,7 +26,8 @@ export default function genVirtuaGrouplModuleMaker() {
 		if (module) return module;
 
 		// The keypath must be valid.
-		const m_id_kp = {
+		const
+			m_id_kp = {
 				/* id: keypath */
 			},
 			m_kp_id = {
@@ -65,7 +66,6 @@ export default function genVirtuaGrouplModuleMaker() {
 			const kp = relative(fp, is_dir ? f : join(dir_name, filename));
 
 			if (!is_dir) {
-				// console.log(f, "@@@@@@@@@@@", dir_name_kp);
 				if (validKeyPath(kp)) {
 					const exports = await getFlatExports(f);
 					const ids = m_f_ids[f] || new Set();
@@ -209,8 +209,6 @@ export default function genVirtuaGrouplModuleMaker() {
 		].join("\n");
 
 		module = { code };
-
-		console.log(module);
 
 		return isIntergration
 			? (cache_intergration[fp] = module)

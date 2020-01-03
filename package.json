@@ -23,6 +23,9 @@
 		"rollup": "^1.27.13"
 	},
 	"scripts": {
+		"b:test": "rollup -c test.rollup.config.js",
+		"pretest:fns": "npm run b:test; clear;clear;",
+		"test:fns": "ava test/fns/**",
 		"clean": "rm -rf dist .nyc_output",
 		"prepare": "npm run build",
 		"ci:coverage": "nyc npm run test && nyc report --reporter=text-lcov > coverage.lcov",
@@ -42,6 +45,7 @@
 	"ava": {
 		"files": [
 			"test/**",
+			"!test/sample/**",
 			"!test/samples/**",
 			"!test/fixtures/**"
 		]

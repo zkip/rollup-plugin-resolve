@@ -1,6 +1,8 @@
 import { promisify } from "util";
-import { readFile as _readFile } from "fs";
+import { readFile as _readFile, existsSync } from "fs";
 import acorn from "acorn";
+import { dualEach, tryResolve } from "./util";
+import { relative, resolve, dirname } from "path";
 
 const readFile = promisify(_readFile);
 
@@ -19,13 +21,14 @@ export default function genExportAnalyzer() {
 		const localExports = [];
 		const relayExports = {};
 		let isDefaultEpxort = false;
+
+		const QRelayExportList = target => (relayExports[target] = relayExports[target] || []);
+
 		for (const node of acorn.parse(code, option).body) {
 			const { type } = node;
 			if (type === "ExportAllDeclaration") {
 				let target = node.source.value;
-				let list = relayExports[target] || [];
-				relayExports[target] = list;
-				list.push("*");
+				QRelayExportList(target).push(["*", "*"]);
 			} else if (type === "ExportDefaultDeclaration") {
 				isDefaultEpxort = true;
 			} else if (type === "ExportNamedDeclaration") {
@@ -33,16 +36,20 @@ export default function genExportAnalyzer() {
 					for (const declaration of node.declaration.declarations || [
 						node.declaration
 					]) {
-						localExports.push(declaration.id.name);
+						let { name } = declaration.id;
+						localExports.push([name, name]);
 					}
 				} else {
-					let target = node.source.value;
-					let list = relayExports[target] || [];
-					relayExports[target] = list;
 					for (const specifier of node.specifiers) {
-						let { name } = specifier.exported;
-						let { name: raw } = specifier.local;
-						list.push([name, raw]);
+						let { name: exported } = specifier.exported;
+						let { name: local } = specifier.local;
+
+						if (node.source) {
+							let target = node.source.value;
+							QRelayExportList(target).push([exported, local]);
+						} else {
+							localExports.push([exported, local]);
+						}
 					}
 				}
 			}
@@ -55,21 +62,23 @@ export default function genExportAnalyzer() {
 		));
 	};
 
-	const getFlatExports = async fp => {
+	const getFlatExports = async (fp, candidateExt = ['.js']) => {
 		const exports = {
-			/* filename(absolute path): names []str */
+			/* { filename(absolute path): { names Set, isDefault bool } }*/
 		};
 		const find = async (f, include, depMap = {}) => {
 			if (!include) {
 				include = [];
 			}
 			let {
-				isDefaultEpxort,
+				isDefaultExport,
 				localExports,
 				relayExports
 			} = await getExports(f);
 
 			const names = (exports[f] && exports[f].names) || new Set();
+
+			console.log(names, relayExports, f, include, "JJJJJJJJJJJJJJ7777777777")
 
 			if (include.length === 0) {
 				localExports.map(le => names.add(le));
@@ -84,26 +93,26 @@ export default function genExportAnalyzer() {
 					}
 				});
 			}
-			exports[f] = { isDefault: isDefaultEpxort, names };
+			exports[f] = { isDefault: isDefaultExport, names };
 
-			await Promise.all(
-				Object.entries(relayExports).map(async ([f2, names]) => {
+			await Promise.all(dualEach(relayExports)
+				(async (f2, names) => {
 					if (names.includes("*")) {
 						names = [];
 					}
 
-					let p = relative(process.cwd(), resolve(dirname(f), f2));
+					let p = tryResolve(relative(process.cwd(), resolve(dirname(f), f2)));
 
-					if (!existsSync(p)) {
-						p += ".js";
+					if (!p) {
+						throw new Error(`@zrlps/resolve: Cannot resolve the path "${f}"`);
 					}
 
-					let d = names.map(([_, raw]) => raw);
+					let locals = names.map(([_, local]) => local);
 
 					// Avoid infinite recursive caused by circular dependencies bwtween modules.
 					if (!depMap[p]) {
 						depMap[p] = true;
-						return await find(p, d, depMap);
+						return await find(p, locals, depMap);
 					}
 				})
 			);
@@ -117,8 +126,8 @@ export default function genExportAnalyzer() {
 
 export class ExportAnalysisResult {
 	constructor(isDefaultEpxort, localExports, relayExports) {
-		this.isDefaultEpxort = isDefaultEpxort || false;
-		this.localExports = localExports || [];
-		this.relayExports = relayExports || {};
+		this.isDefaultExport = isDefaultEpxort || false; // bool
+		this.localExports = localExports || []; /* [ [ exported , local ]str ... ] */
+		this.relayExports = relayExports || {}; /* { target: [ [ exported, local ]str ... ] ... } */
 	}
 }
