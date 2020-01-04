@@ -38,3 +38,5 @@ export const last = arraylike => arraylike[arraylike.length - 1];
 export const first = arraylike => arraylike[0];
 
 export const dualEach = o => fn => Object.entries(o).map(async ([k, v]) => await fn(k, v));
+
+export const lessFirst = (a, b) => a.length < b.length ? a : b;

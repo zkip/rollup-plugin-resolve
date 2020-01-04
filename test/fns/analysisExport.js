@@ -1,6 +1,7 @@
 import test from "ava";
 import { join } from "path";
 import genExportAnalyzer from "../dist/genExportAnalyzer.cjs"
+import { dualEach } from "../dist/util.cjs";
 
 process.chdir(join(process.cwd(), "test/fixtures/exports"));
 
@@ -61,6 +62,9 @@ process.chdir(join(process.cwd(), "test/fixtures/exports"));
 async function start() {
 	const { getFlatExports } = genExportAnalyzer();
 	const exports = await getFlatExports("main.js");
-	console.log(exports);
+	console.log("@@@@@@@@@@@@@@@@@@");
+	dualEach(exports)((fp, expt) => {
+		console.log(fp, expt);
+	})
 }
 start();

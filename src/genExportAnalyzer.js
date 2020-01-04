@@ -1,7 +1,7 @@
 import { promisify } from "util";
 import { readFile as _readFile, existsSync } from "fs";
 import acorn from "acorn";
-import { dualEach, tryResolve } from "./util";
+import { dualEach, tryResolve, lessFirst } from "./util";
 import { relative, resolve, dirname } from "path";
 
 const readFile = promisify(_readFile);
@@ -62,60 +62,56 @@ export default function genExportAnalyzer() {
 		));
 	};
 
-	const getFlatExports = async (fp, candidateExt = ['.js']) => {
+	const getFlatExports = async (fp, candidateExt = ['js']) => {
 		const exports = {
 			/* { filename(absolute path): { names Set, isDefault bool } }*/
 		};
-		const find = async (f, include, depMap = {}) => {
-			if (!include) {
-				include = [];
+		const find = async (f, include = [], importer = "") => {
+
+			let exported = (exports[f] || { isDefault: false, names: new Set() })
+			if (!exports[f]) {
+				let {
+					isDefaultExport,
+					localExports,
+					relayExports
+				} = await getExports(f);
+
+				const { names } = exported;
+
+				const requires = include.map(([_, local]) => local)
+
+				if (include.length === 0 || requires.includes("*")) {
+					localExports.map(le => names.add(le));
+				} else {
+					const [a, b] = lessFirst(requires, localExports);
+					a.map(le => b.includes(le) && names.add(le));
+				}
+
+				exported.names = names;
+				exported.isDefault = isDefaultExport;
+				exports[f] = exported;
+
+				await Promise.all(dualEach(relayExports)
+					(async (f2, names) => {
+						const p = tryResolve(relative(process.cwd(), resolve(dirname(f), f2)), candidateExt);
+
+						if (!p) {
+							throw new Error(`@zrlps/resolve: Cannot resolve the path "${f}"`);
+						}
+
+						return await find(p, names, f);
+					})
+				);
 			}
-			let {
-				isDefaultExport,
-				localExports,
-				relayExports
-			} = await getExports(f);
 
-			const names = (exports[f] && exports[f].names) || new Set();
+			if (importer !== "") {
+				const importer_exports = exports[importer];
 
-			console.log(names, relayExports, f, include, "JJJJJJJJJJJJJJ7777777777")
+				const ok = Array.from(exported.names).reduce((ok, [_, local]) => ok.add(local), new Set())
 
-			if (include.length === 0) {
-				localExports.map(le => names.add(le));
-			} else {
-				let cm =
-					include.length < localExports.length
-						? include
-						: localExports;
-				cm.map(le => {
-					if (include.includes(le)) {
-						names.add(le);
-					}
-				});
+				include.map((x) => ok.has(x[1]) && importer_exports.names.add(x));
+
 			}
-			exports[f] = { isDefault: isDefaultExport, names };
-
-			await Promise.all(dualEach(relayExports)
-				(async (f2, names) => {
-					if (names.includes("*")) {
-						names = [];
-					}
-
-					let p = tryResolve(relative(process.cwd(), resolve(dirname(f), f2)));
-
-					if (!p) {
-						throw new Error(`@zrlps/resolve: Cannot resolve the path "${f}"`);
-					}
-
-					let locals = names.map(([_, local]) => local);
-
-					// Avoid infinite recursive caused by circular dependencies bwtween modules.
-					if (!depMap[p]) {
-						depMap[p] = true;
-						return await find(p, locals, depMap);
-					}
-				})
-			);
 		};
 		await find(fp);
 		return exports;
