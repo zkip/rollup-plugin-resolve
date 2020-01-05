@@ -3,3 +3,4 @@ package-lock.json
 .nyc_output
 dist
 coverage.Icov
+test/dist

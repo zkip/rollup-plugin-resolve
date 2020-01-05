@@ -1,9 +1,9 @@
 export const X = 34;
 
-import d from "../main"
+import d from "../main";
 
-export { g as ggg, p2 as fuck } from "../main"
+export { g as ggg, p2 as fff } from "../main";
 
-export const g2 = g * 2
+export const g2 = g * 2;
 
-export { d as F }
+export { d as F };

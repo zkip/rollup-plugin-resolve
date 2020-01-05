@@ -1,6 +1,15 @@
 import { promisify } from "util";
 import { validIdent, setByPath, isDir, dualEach } from "./util";
-import { join, normalize, dirname, relative, basename, extname } from "path";
+import {
+	join,
+	normalize,
+	dirname,
+	relative,
+	basename,
+	extname,
+	resolve,
+	isAbsolute
+} from "path";
 import genExportAnalyzer from "./genExportAnalyzer";
 
 import _glob from "glob";
@@ -8,26 +17,26 @@ import _glob from "glob";
 const glob = promisify(_glob);
 
 export default function genVirtuaGrouplModuleMaker() {
-	const cache_combine = {
-		/* fp: VirtualCombineModule */
-	};
-	const cache_intergration = {
-		/* fp: VirtualIntergrationModule */
-	};
+	// filepath: VirtualCombineModule
+	// The filepath is absolute or relative with cwd.
+	const cache_combine = new Map();
+	// filepath: VirtualIntergrationModule
+	// The filepath's type is same with above.
+	const cache_intergration = new Map();
+
 	const { getFlatExports } = genExportAnalyzer();
 
 	return async (fp, isIntergration) => {
 		if (!isDir(fp)) return null;
 
 		let module = isIntergration
-			? cache_intergration[fp]
-			: cache_combine[fp];
+			? cache_intergration.get(fp)
+			: cache_combine.get(fp);
 
 		if (module) return module;
 
 		// The keypath must be valid.
-		const
-			m_id_kp = {
+		const m_id_kp = {
 				/* id: keypath */
 			},
 			m_kp_id = {
@@ -52,6 +61,8 @@ export default function genVirtuaGrouplModuleMaker() {
 		const genID = () => `_${count++}`;
 
 		const filepaths = await glob(join(fp, isIntergration ? "/**" : "/*"));
+
+		const to_flagpath = f => (isAbsolute(f) ? f : join("@", f));
 
 		const id_imported = new Set();
 
@@ -150,12 +161,14 @@ export default function genVirtuaGrouplModuleMaker() {
 		});
 
 		dualEach(importer_default)((f, id) => {
-			const line = `import ${id} from "${f}";`;
+			const rel_f = to_flagpath(f);
+			const line = `import ${id} from "${rel_f}";`;
 			lines.push(line);
 		});
 		dualEach(importer_named)((f, map) => {
+			const rel_f = to_flagpath(f);
 			const raw = map.map(([name, id]) => `${name} as ${id}`).join(", ");
-			const line = `import { ${raw} } from "${f}";`;
+			const line = `import { ${raw} } from "${rel_f}";`;
 			lines.push(line);
 		});
 
@@ -210,9 +223,10 @@ export default function genVirtuaGrouplModuleMaker() {
 
 		module = { code };
 
-		return isIntergration
-			? (cache_intergration[fp] = module)
-			: (cache_combine[fp] = module);
+		isIntergration
+			? cache_intergration.set(fp, module)
+			: cache_combine.set(fp, module);
+		return module;
 	};
 }
 

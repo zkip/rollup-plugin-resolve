@@ -1,4 +1,4 @@
-import resolve from "@rollup/plugin-node-resolve"
+import resolve from "@rollup/plugin-node-resolve";
 
 export default [
 	{
@@ -9,7 +9,7 @@ export default [
 			{
 				file: "test/dist/genVirtualGroupModuleMaker.cjs.js",
 				format: "cjs",
-				sourcemap: true,
+				sourcemap: true
 			}
 		]
 	},
@@ -22,7 +22,7 @@ export default [
 				exports: "named",
 				file: "test/dist/genExportAnalyzer.cjs.js",
 				format: "cjs",
-				sourcemap: true,
+				sourcemap: true
 			}
 		]
 	},
@@ -34,8 +34,8 @@ export default [
 			{
 				file: "test/dist/util.cjs.js",
 				format: "cjs",
-				sourcemap: true,
+				sourcemap: true
 			}
 		]
-	},
+	}
 ];

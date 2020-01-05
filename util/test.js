@@ -5,24 +5,26 @@
  * @param {import('rollup').OutputOptions} outputOptions
  */
 const getCode = async (bundle, outputOptions, allFiles = false) => {
-  const { output } = await bundle.generate(outputOptions || { format: "cjs" });
+	const { output } = await bundle.generate(
+		outputOptions || { format: "cjs" }
+	);
 
-  if (allFiles) {
-    return output.map(({ code, fileName, source }) => {
-      return { code, fileName, source };
-    });
-  }
-  const [{ code }] = output;
-  return code;
+	if (allFiles) {
+		return output.map(({ code, fileName, source }) => {
+			return { code, fileName, source };
+		});
+	}
+	const [{ code }] = output;
+	return code;
 };
 
 const getImports = async bundle => {
-  if (bundle.imports) {
-    return bundle.imports;
-  }
-  const { output } = await bundle.generate({ format: "esm" });
-  const [{ imports }] = output;
-  return imports;
+	if (bundle.imports) {
+		return bundle.imports;
+	}
+	const { output } = await bundle.generate({ format: "esm" });
+	const [{ imports }] = output;
+	return imports;
 };
 
 /**
@@ -31,35 +33,38 @@ const getImports = async bundle => {
  * @param {object} args
  */
 const testBundle = async (t, bundle, args = {}) => {
-  const { output } = await bundle.generate({ format: "cjs" });
-  const [{ code }] = output;
-  const module = { exports: {} };
-  const params = [
-    "module",
-    "exports",
-    "require",
-    "t",
-    ...Object.keys(args)
-  ].concat(`let result;\n\n${code}\n\nreturn result;`);
+	const { output } = await bundle.generate({
+		exports: "named",
+		format: "cjs"
+	});
+	const [{ code }] = output;
+	const module = { exports: {} };
+	const params = [
+		"module",
+		"exports",
+		"require",
+		"t",
+		...Object.keys(args)
+	].concat(`let result;\n\n${code}\n\nreturn result;`);
 
-  // eslint-disable-next-line no-new-func
-  const func = new Function(...params);
-  let error;
-  let result;
+	// eslint-disable-next-line no-new-func
+	const func = new Function(...params);
+	let error;
+	let result;
 
-  try {
-    result = func(
-      ...[module, module.exports, require, t, ...Object.values(args)]
-    );
-  } catch (e) {
-    error = e;
-  }
+	try {
+		result = func(
+			...[module, module.exports, require, t, ...Object.values(args)]
+		);
+	} catch (e) {
+		error = e;
+	}
 
-  return { code, error, module, result };
+	return { code, error, module, result };
 };
 
 module.exports = {
-  getCode,
-  getImports,
-  testBundle
+	getCode,
+	getImports,
+	testBundle
 };
