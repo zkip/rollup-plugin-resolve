@@ -53,7 +53,7 @@ import config from "@/../rollup.config.js";
 
 Comine import 允许你导入一个文件夹。它的语义由选项 `option.dirBehaviour` 来决定。
 
- `option.dirBehaviour`  的选项为以下枚举值中的任何一个：
+`option.dirBehaviour` 的选项为以下枚举值中的任何一个：
 
 -   "es6"
 -   "collective"
@@ -118,7 +118,7 @@ x // 3
 
 ### Variable import
 
-你可以在 options 中设定一些路径变量，在导入时使用`$`来引用这些变量。该插件在正常工作前会对这些变量进行检查，如果发现无效的路径变量，将会抛出错误。
+你可以在 options 中设定一些路径变量，在导入时使用`$`来引用这些变量。该插件在正常工作前会对这些变量进行检查，如果发现无效的路径变量，将会导致错误。
 
 使用 `option.variables` 来设定变量。它是一个对象，key 表示变量的名字(它必须符合 ecma262 标识符<sup>[es]</sup>命名规范)，value 表示对应的路径，与 base import 一样，除非是绝对路径，否则它表示以`process.cwd()`为起点的相对路径。
 
@@ -165,9 +165,13 @@ import timeout from "$async/timeout"; // src/util/async/timeout
 
 ###### 内置的变量
 
-该插件内置了一些变量，使用者无法更改它们的值。
+该插件内置了一些变量，使用者无法更改它们的值，并且不需要使用\$进行引用。
 
--   `~`表示该系统中的环境变量HOME
+-   `~`表示该系统中的环境变量 HOME
+
+```
+import conf from "~/config.js";
+```
 
 ### Integration import
 
@@ -225,8 +229,6 @@ import Animal from "{@/data/Animal}";
 */
 ```
 
-
-
 ### type option
 
 ```typescript
@@ -237,9 +239,5 @@ type option {
 	candidateExt: []string
 }
 ```
-
-
-
-
 
 [es]: https://tc39.es/ecma262/#prod-IdentifierName
