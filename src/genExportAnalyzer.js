@@ -85,9 +85,12 @@ export default function genExportAnalyzer() {
 				const requires = include.map(([_, local]) => local);
 
 				if (include.length === 0 || requires.includes("*")) {
-					localExports.map(le => names.add(le));
+					localExports.map(([exported]) => names.add(exported));
 				} else {
-					const [a, b] = lessFirst(requires, localExports);
+					const [a, b] = lessFirst(
+						requires,
+						localExports.map(([exported]) => exported)
+					);
 					a.map(le => b.includes(le) && names.add(le));
 				}
 
@@ -117,11 +120,13 @@ export default function genExportAnalyzer() {
 				const importer_exports = exports[importer];
 
 				const ok = Array.from(exported.names).reduce(
-					(ok, [_, local]) => ok.add(local),
+					(ok, le) => ok.add(le),
 					new Set()
 				);
 
-				include.map(x => ok.has(x[1]) && importer_exports.names.add(x));
+				include.map(
+					x => ok.has(x[1]) && importer_exports.names.add(x[0])
+				);
 			}
 		};
 		await find(fp);

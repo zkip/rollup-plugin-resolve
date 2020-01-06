@@ -16,6 +16,8 @@ import _glob from "glob";
 
 const glob = promisify(_glob);
 
+const assign = Object.assign;
+
 export default function genVirtuaGrouplModuleMaker() {
 	// filepath: VirtualCombineModule
 	// The filepath is absolute or relative with cwd.
@@ -37,8 +39,8 @@ export default function genVirtuaGrouplModuleMaker() {
 
 		// The keypath must be valid.
 		const m_id_kp = {
-			/* id: keypath */
-		},
+				/* id: keypath */
+			},
 			m_kp_id = {
 				/* keypath: id */
 			},
@@ -62,11 +64,11 @@ export default function genVirtuaGrouplModuleMaker() {
 
 		const filepaths = await glob(join(fp, isIntergration ? "/**" : "/*"));
 
-		const to_flagpath = f => (isAbsolute(f) ? f : join("@", f));
-
 		const id_imported = new Set();
 
 		const dir_kps = [];
+
+		const not_default_kps = [];
 
 		for (let f of filepaths) {
 			if (normalize(f) === normalize(fp)) continue;
@@ -77,16 +79,33 @@ export default function genVirtuaGrouplModuleMaker() {
 			const kp = relative(fp, is_dir ? f : join(dir_name, filename));
 
 			if (!is_dir) {
+				const exports = await getFlatExports(f);
+				const ids = m_f_ids[f] || new Set();
+
+				m_f_exports[f] = exports;
+				m_f_ids[f] = ids;
+
+				dualEach(exports)((_, { names }) => {
+					for (const name of names) {
+						const kp = relative(fp, join(dir_name, name));
+
+						// named export has a higher priority
+						const id = m_kp_id[kp] || genID();
+
+						if (id_imported.has(id)) {
+							let f = m_id_f[id];
+							m_f_ids[f] && m_f_ids[f].delete(id);
+						}
+						ids.add(id);
+						id_imported.add(id);
+
+						m_kp_id[kp] = id;
+						m_id_kp[id] = kp;
+						delete m_id_isDefault[id];
+					}
+				});
 				if (validKeyPath(kp)) {
-					const exports = await getFlatExports(f);
-					const ids = m_f_ids[f] || new Set();
-
-					m_f_exports[f] = exports;
-					m_f_ids[f] = ids;
-
-					if (validKeyPath(filename)) {
-						const kp = relative(fp, join(dir_name, filename));
-
+					if (exports[f].isDefault) {
 						// The default export has a lower priority.
 						if (!m_kp_id[kp]) {
 							const id = genID();
@@ -99,31 +118,15 @@ export default function genVirtuaGrouplModuleMaker() {
 							m_id_kp[id] = kp;
 							m_id_isDefault[id] = true;
 						}
+					} else {
+						not_default_kps.push(kp);
 					}
-
-					dualEach(exports)((_, { names }) => {
-						for (const [name] of names) {
-							const kp = relative(fp, join(dir_name, name));
-
-							// named export has a higher priority
-							const id = m_kp_id[kp] || genID();
-
-							if (id_imported.has(id)) {
-								let f = m_id_f[id];
-								m_f_ids[f].delete(id);
-							}
-							ids.add(id);
-							id_imported.add(id);
-
-							m_kp_id[kp] = id;
-							m_id_kp[id] = kp;
-							m_id_isDefault[id] = false;
-						}
-					});
 				} else {
 				}
 			} else {
-				dir_kps.push(kp);
+				if (isIntergration) {
+					dir_kps.push(kp);
+				}
 			}
 		}
 
@@ -132,95 +135,17 @@ export default function genVirtuaGrouplModuleMaker() {
 			dir_kps
 		);
 
-		finalKps.map(kp => {
-			if (kp.split("/").length === 1) {
-				const id = genID();
-				m_empty_id_kp[id] = kp;
-			}
-		});
+		console.log(finalKps, m_id_kp, m_kp_id, dir_kps, "&&&&&&&&&&&&&&&&7");
 
-		// Generate the code of virtual-module.
-		const lines = [];
-		const summary = {};
-
-		const importer_named = {};
-		const importer_default = {};
-
-		dualEach(m_f_ids)((f, ids) => {
-			for (const id of ids) {
-				if (m_id_isDefault[id]) {
-					importer_default[f] = id;
-				} else {
-					const kp = m_id_kp[id];
-					const name = basename(kp);
-					const map = importer_named[f] || [];
-					importer_named[f] = map;
-					map.push([name, id]);
-				}
-			}
-		});
-
-		dualEach(importer_default)((f, id) => {
-			const rel_f = to_flagpath(f);
-			const line = `import ${id} from "${rel_f}";`;
-			lines.push(line);
-		});
-		dualEach(importer_named)((f, map) => {
-			const rel_f = to_flagpath(f);
-			const raw = map.map(([name, id]) => `${name} as ${id}`).join(", ");
-			const line = `import { ${raw} } from "${rel_f}";`;
-			lines.push(line);
-		});
-
-		const exports_named = [];
-		dualEach(m_id_kp)((id, kp) => {
-			if (kp.split("/").length === 1) {
-				exports_named.push([id, kp]);
-			}
-			setByPath(summary, id, kp);
-		});
-
-		const exports_empty = [];
-		dualEach(m_empty_id_kp)((id, kp) => {
-			if (kp.split("/").length === 1) {
-				exports_empty.push([id, kp]);
-			}
-			setByPath(summary, id, kp);
-		});
-
-		const exports_empty_raw = exports_empty
-			.map(([id, kp]) => `${id} = {}`)
-			.join(",");
-
-		const empty_defintion =
-			exports_empty_raw === "" ? "" : `const ${exports_empty_raw};\n`;
-
-		exports_named.push(...exports_empty);
-		const exports_named_raw = exports_named
-			.map(([id, kp]) => `${id} as ${kp}`)
-			.join(", ");
-
-		const code_named_exports =
-			exports_named_raw === ""
-				? ""
-				: `export { ${exports_named_raw} };\n`;
-
-		const code_import = lines.join("\n");
-
-		const pkg_raw = JSON.stringify(summary).replace(
-			/"([^"]+)":"([^"]+)"/g,
-			`"$1": $2`
+		[...finalKps, ...not_default_kps].map(
+			kp => (m_empty_id_kp[genID()] = kp)
 		);
 
-		const code_default_export = `export default ${pkg_raw};\n`;
-
-		const code = [
-			code_import,
-			empty_defintion,
-			code_default_export,
-			code_named_exports
-		].join("\n");
-
+		// Generate the code of virtual-module.
+		const code = genCode(
+			{ m_f_ids, m_id_kp, m_empty_id_kp, m_id_isDefault },
+			isIntergration
+		);
 		module = { code };
 
 		isIntergration
@@ -228,6 +153,98 @@ export default function genVirtuaGrouplModuleMaker() {
 			: cache_combine.set(fp, module);
 		return module;
 	};
+}
+
+const to_flagpath = f => (isAbsolute(f) ? f : join("@", f));
+
+function genCode(
+	{ m_f_ids, m_id_kp, m_empty_id_kp, m_id_isDefault },
+	isIntergration
+) {
+	// Generate the code of virtual-module.
+	const summary = {};
+	const import_lines = [];
+
+	const importer_named = {};
+	const importer_default = {};
+
+	const exports_named = [];
+	const exports_empty = [];
+
+	dualEach(m_f_ids)((f, ids) => {
+		for (const id of ids) {
+			if (m_id_isDefault[id]) {
+				importer_default[f] = id;
+			} else if (!isIntergration) {
+				const kp = m_id_kp[id];
+				const name = basename(kp);
+				const map = importer_named[f] || [];
+				importer_named[f] = map;
+				map.push([name, id]);
+			}
+		}
+	});
+
+	console.log(
+		m_id_isDefault,
+		m_empty_id_kp,
+		"UUUUUUUU",
+		m_id_kp,
+		importer_named
+	);
+	dualEach(importer_default)((f, id) =>
+		import_lines.push(`import ${id} from "${to_flagpath(f)}";`)
+	);
+	if (isIntergration) {
+		const code_import = import_lines.join("\n") + "\n";
+		dualEach(assign(m_id_kp, m_empty_id_kp))((id, kp) =>
+			setByPath(summary, id, kp)
+		);
+		const summary_raw = JSON.stringify(summary).replace(
+			/"([^"]+)":"([^"]+)"/g,
+			`"$1": $2`
+		);
+
+		const code_default_export = `export default ${summary_raw};\n`;
+
+		return [
+			code_import,
+			code_empty_defintion,
+			code_default_export,
+			code_named_exports
+		].join("\n");
+	}
+
+	dualEach(importer_named)((f, map) => {
+		const rel_f = to_flagpath(f);
+		const raw = map.map(([name, id]) => `${name} as ${id}`).join(", ");
+		import_lines.push(`import { ${raw} } from "${rel_f}";`);
+	});
+
+	dualEach(m_id_kp)((id, kp) => exports_named.push([id, kp]));
+	dualEach(m_empty_id_kp)((id, kp) => exports_empty.push([id, kp]));
+
+	const code_import = import_lines.join("\n") + "\n";
+
+	const exports_empty_raw = exports_empty
+		.map(([id]) => `${id} = {}`)
+		.join(",");
+
+	const code_empty_defintion =
+		exports_empty_raw === "" ? "" : `const ${exports_empty_raw};\n`;
+
+	exports_named.push(...exports_empty);
+
+	const exports_named_raw = exports_named
+		.map(([id, kp]) => `${id} as ${kp}`)
+		.join(", ");
+
+	const code_named_exports =
+		exports_named_raw === "" ? "" : `export { ${exports_named_raw} };\n`;
+
+	return [code_import, code_empty_defintion, code_named_exports]
+		.filter(Boolean)
+		.join("\n");
 }
 
 function validKeyPath(kp) {

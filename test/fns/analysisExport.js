@@ -66,11 +66,10 @@ test("flat exports", async t => {
 		const exports = await getFlatExports("main.js");
 
 		const m = {
-			"main.js": { isDefault: true, exports: ["g"], locals: ["g"] },
+			"main.js": { isDefault: true, names: ["g"] },
 			"b/x.js": {
 				isDefault: false,
-				exports: ["X", "g2", "F", "ggg"],
-				locals: ["X", "g2", "d", "g"]
+				names: ["X", "g2", "F", "ggg"]
 			}
 		};
 
@@ -79,17 +78,11 @@ test("flat exports", async t => {
 				await Promise.all(
 					dualEach(exports)((p, { isDefault, names }) => {
 						const ns = Array.from(names);
-						const { exports, locals } = m[p];
+						const mp = m[p];
 						return (
-							m[p].isDefault === isDefault &&
-							ns.length === exports.length &&
-							ns.reduce(
-								(ok, [exported, local]) =>
-									ok &&
-									exports.findIndex(e => e === exported) ===
-										locals.findIndex(l => l === local),
-								true
-							)
+							mp.isDefault === isDefault &&
+							ns.length === mp.names.length &&
+							ns.reduce((ok, name) => ok && names.has(name), true)
 						);
 					})
 				)
