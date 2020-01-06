@@ -37,8 +37,8 @@ export default function genVirtuaGrouplModuleMaker() {
 
 		// The keypath must be valid.
 		const m_id_kp = {
-				/* id: keypath */
-			},
+			/* id: keypath */
+		},
 			m_kp_id = {
 				/* keypath: id */
 			},
@@ -102,18 +102,18 @@ export default function genVirtuaGrouplModuleMaker() {
 					}
 
 					dualEach(exports)((_, { names }) => {
-						for (const name of names) {
+						for (const [name] of names) {
 							const kp = relative(fp, join(dir_name, name));
 
 							// named export has a higher priority
 							const id = m_kp_id[kp] || genID();
 
-							ids.add(id);
-							id_imported.add(id);
 							if (id_imported.has(id)) {
 								let f = m_id_f[id];
 								m_f_ids[f].delete(id);
 							}
+							ids.add(id);
+							id_imported.add(id);
 
 							m_kp_id[kp] = id;
 							m_id_kp[id] = kp;

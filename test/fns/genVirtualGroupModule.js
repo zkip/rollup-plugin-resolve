@@ -31,8 +31,9 @@ async function genBundle(code) {
 test("combine import", async t => {
 	const genVirtualModuleCode = genVirtualGroupModuleMaker();
 	const { code } = await genVirtualModuleCode("./p");
-	console.log("------code-----");
+	console.log("------code-start-----");
 	console.log(code);
+	console.log("------code-end-----");
 	// const bundle = await genBundle(code);
 	// const rst = await testBundle(t, bundle);
 	// console.log("------result-----");
