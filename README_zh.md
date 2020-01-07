@@ -95,7 +95,7 @@ import { x } from "./pkg"; // Error
 
 关于有效的拓展名：
 如果文件的名字符合 ecma262 标识符<sup>[es]</sup>命名规范并且拓展名是有效的，那么它是一个有效的文件。
-有效的拓展名是`"js","mjs","node"`中的任何一个，并且可以通过选项 `option.candidateExt` 来指定额外的拓展名。
+有效的拓展名是`"js","mjs","node","json"`中的任何一个，并且可以通过选项 `option.candidateExt` 来指定额外的拓展名。
 
 > 注意：即便文件名不是有效的文件，仍会导出其中的具名导出。
 
