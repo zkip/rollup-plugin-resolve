@@ -9,6 +9,7 @@ Resolve plugin for rollupjs.
 -   Combine 组合
 -   Integration 集成
 -   Variable 自定义变量
+-   Navigator 导航
 
 ### Base import
 
@@ -61,7 +62,7 @@ Comine import 允许你导入一个文件夹。它的语义由选项 `option.dir
 
 ###### es6
 
-这是 es6 默认的文件夹导入行为。它会寻找目标文件夹中的一个 index.js 的文件并将该文件导出，如果没有找到则会报告错误。
+这是 es6 默认的文件夹导入行为。它会寻找目标文件夹中的一个 index.js 的文件并将该文件导出，如果没有找到则会导致错误。
 
 ###### collective
 
@@ -120,7 +121,7 @@ x // 3
 
 你可以在 options 中设定一些路径变量，在导入时使用`$`来引用这些变量。该插件在正常工作前会对这些变量进行检查，如果发现无效的路径变量，将会导致错误。
 
-使用 `option.variables` 来设定变量。它是一个对象，key 表示变量的名字(它必须符合 ecma262 标识符<sup>[es]</sup>命名规范)，value 表示对应的路径，与 base import 一样，除非是绝对路径，否则它表示以`process.cwd()`为起点的相对路径。
+使用 `option.variables` 来设定变量。它是一个对象，key 表示变量的名字(符合 ecma262 标识符<sup>[es]</sup>命名规范)，value 表示对应的路径，与 base import 一样，除非是绝对路径，否则它表示以`process.cwd()`为起点的相对路径。
 
 使用案例：
 
@@ -163,7 +164,7 @@ import heart from "$icons/heart.ico"; // asset/icons/heart.ico
 import timeout from "$async/timeout"; // src/util/async/timeout
 ```
 
-###### 内置的变量
+###### Internal variables
 
 该插件内置了一些变量，使用者无法更改它们的值，并且不需要使用\$进行引用。
 
@@ -229,11 +230,23 @@ import Animal from "{@/data/Animal}";
 */
 ```
 
-### type option
+### Navigator
+
+在任何地方（以上的所有模式中），你都可以使用导航式的路径来表示，但是占位符和变量必须处于第一位。
+
+```
+import a from "@/../";
+import b from "{@/../a/../a/..};
+import c from "{@/../a/../a/../};
+import d from "$res/../icon/d.ico;
+import e from "{$data/../animal}";
+import f from "~/../../../../../../";
+```
+
+### type Option
 
 ```typescript
-
-type option {
+type Option {
 	dirBehaviour "es6" | "collective" | "auto"
 	variables { key Identity: value URL.Path }
 	candidateExt: []string
