@@ -42,4 +42,4 @@ export const dualEach = o => fn =>
 
 export const lessFirst = (a, b) => (a.length < b.length ? [a, b] : [b, a]);
 
-export const all$p = p => p.constructor === Array ? Promise.all(p) : p;
+export const all$p = (...ps) => Promise.all(ps);

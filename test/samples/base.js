@@ -5,34 +5,33 @@ import { testBundle } from "../../util/test";
 import { copySync, ensureDirSync, removeSync } from "fs-extra";
 
 import resolve from "../..";
+import { all$p } from "../../src/util";
 
 process.chdir(join(__dirname, "../fixtures/base"));
 
-function gen(t) {
-  return async (base, input, answer) => {
-    const bundle = await rollup({
-      plugins: [resolve({ base })],
-      input
-    });
-    let { result } = await testBundle(t, bundle);
-    t.deepEqual(result, { answer });
-  };
-}
+const gen = t => async (base, input, answer) => {
+	const bundle = await rollup({
+		plugins: [resolve({ base })],
+		input
+	});
+	let { result } = await testBundle(t, bundle);
+	t.deepEqual(result, { answer });
+};
 
-test("[base option: default] normal", async t => {
-  let find = gen(t);
-  await Promise.all([
-    find(undefined, "find.js", 11),
-    find(undefined, "./a/b/find.js", 83)
-  ]);
+test("base default, normal", async t => {
+	let find = gen(t);
+	await all$p(
+		find(undefined, "find.js", 11),
+		find(undefined, "./a/b/find.js", 83)
+	);
 });
 
-test("[base option: default] navigator", async t => {
-  let find = gen(t);
-  await Promise.all([
-    find(undefined, "a/b/find_with_prev_default.js", 137),
-    find(undefined, "a/find_with_prev_default.js", 73)
-  ]);
+test("base default, navigator", async t => {
+	let find = gen(t);
+	await all$p(
+		find(undefined, "a/b/find_with_prev_default.js", 137),
+		find(undefined, "a/find_with_prev_default.js", 73)
+	);
 });
 
 // test("[base option: specified] normal", async t => {

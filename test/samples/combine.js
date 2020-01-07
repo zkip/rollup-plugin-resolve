@@ -19,6 +19,11 @@ function gen(t) {
 	};
 }
 
+/*
+	option dirBehaviour: es6 / collective / auto
+	option 
+*/
+
 test("combine", async t => {
 	const bundle = await rollup({
 		plugins: [resolve()],
