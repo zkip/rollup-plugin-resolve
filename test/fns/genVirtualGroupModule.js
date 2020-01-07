@@ -2,7 +2,11 @@ import test from "ava";
 import { join } from "path";
 import { testBundle } from "../../util/test";
 import { rollup } from "rollup";
+import inspector from "inspector";
 import genVirtualGroupModuleMaker from "../dist/genVirtualGroupModuleMaker.cjs";
+
+// inspector.open();
+// inspector.waitForDebugger();
 
 process.chdir(join(process.cwd(), "test/fixtures/combine"));
 
@@ -30,10 +34,11 @@ async function genBundle(code) {
 
 test("combine import", async t => {
 	const genVirtualModuleCode = genVirtualGroupModuleMaker();
-	const { code } = await genVirtualModuleCode("./p");
+	const { code } = await genVirtualModuleCode("./p", true);
 	console.log("------code-start-----");
 	console.log(code);
 	console.log("------code-end-----");
+	// debugger
 	// const bundle = await genBundle(code);
 	// const rst = await testBundle(t, bundle);
 	// console.log("------result-----");

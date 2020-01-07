@@ -1,5 +1,5 @@
-export { b } from "../2a";
-import { v } from "../2a";
+export { b } from "../a";
+import { v } from "../a";
 
 export const H = 13;
 

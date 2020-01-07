@@ -1,5 +1,5 @@
 import { promisify } from "util";
-import { validIdent, setByPath, isDir, dualEach } from "./util";
+import { validIdent, setByPath, isDir, dualEach, all$p } from "./util";
 import {
 	join,
 	normalize,
@@ -13,10 +13,12 @@ import {
 import genExportAnalyzer from "./genExportAnalyzer";
 
 import _glob from "glob";
+import { ERR_EXPORT_CONFLICT, CombineExportError } from "./errors";
 
 const glob = promisify(_glob);
 
 const assign = Object.assign;
+const combine = (...os) => assign({}, ...os);
 
 export default function genVirtuaGrouplModuleMaker() {
 	// filepath: VirtualCombineModule
@@ -39,8 +41,8 @@ export default function genVirtuaGrouplModuleMaker() {
 
 		// The keypath must be valid.
 		const m_id_kp = {
-				/* id: keypath */
-			},
+			/* id: keypath */
+		},
 			m_kp_id = {
 				/* keypath: id */
 			},
@@ -70,6 +72,8 @@ export default function genVirtuaGrouplModuleMaker() {
 
 		const not_default_kps = [];
 
+		const name_exported = {};
+
 		for (let f of filepaths) {
 			if (normalize(f) === normalize(fp)) continue;
 
@@ -85,46 +89,70 @@ export default function genVirtuaGrouplModuleMaker() {
 				m_f_exports[f] = exports;
 				m_f_ids[f] = ids;
 
-				dualEach(exports)((_, { names }) => {
-					for (const name of names) {
-						const kp = relative(fp, join(dir_name, name));
+				const _name_exported = {}
 
-						// named export has a higher priority
-						const id = m_kp_id[kp] || genID();
+				if (!isIntergration) {
+					dualEach(exports)((_, { names }) => {
+						for (const name of names) {
+							const kp = relative(fp, join(dir_name, name));
 
-						if (id_imported.has(id)) {
-							let f = m_id_f[id];
-							m_f_ids[f] && m_f_ids[f].delete(id);
-						}
-						ids.add(id);
-						id_imported.add(id);
+							if (!isIntergration && name in name_exported) {
+								// TODO: need more information for error
+								throw new CombineExportError(ERR_EXPORT_CONFLICT, `Export conflict.`);
+							}
+							_name_exported[name] = true
 
-						m_kp_id[kp] = id;
-						m_id_kp[id] = kp;
-						delete m_id_isDefault[id];
-					}
-				});
-				if (validKeyPath(kp)) {
-					if (exports[f].isDefault) {
-						// The default export has a lower priority.
-						if (!m_kp_id[kp]) {
-							const id = genID();
+							// named export has a higher priority
+							const id = m_kp_id[kp] || genID();
 
-							id_imported.add(id);
+							if (id_imported.has(id)) {
+								let f = m_id_f[id];
+								m_f_ids[f] && m_f_ids[f].delete(id);
+							}
 							ids.add(id);
+							id_imported.add(id);
 
-							m_id_f[id] = f;
 							m_kp_id[kp] = id;
 							m_id_kp[id] = kp;
-							m_id_isDefault[id] = true;
+							delete m_id_isDefault[id]
 						}
-					} else {
-						not_default_kps.push(kp);
+					});
+
+					if (validKeyPath(kp)) {
+						if (!m_kp_id[kp]) {
+							if (exports[f].isDefault) {
+								// The default export has a lower priority.
+								const id = genID();
+
+								id_imported.add(id);
+								ids.add(id);
+
+								m_id_f[id] = f;
+								m_kp_id[kp] = id;
+								m_id_kp[id] = kp;
+								m_id_isDefault[id] = true;
+							} else {
+								not_default_kps.push(kp);
+							}
+						}
 					}
 				} else {
+					if (validKeyPath(kp)) {
+						const id = genID();
+
+						ids.add(id);
+
+						m_id_f[id] = f;
+						m_kp_id[kp] = id;
+						m_id_kp[id] = kp;
+						m_id_isDefault[id] = exports[f].isDefault;
+					}
 				}
+
+
+				assign(name_exported, _name_exported);
 			} else {
-				if (isIntergration) {
+				if (isIntergration && validKeyPath(kp)) {
 					dir_kps.push(kp);
 				}
 			}
@@ -134,8 +162,6 @@ export default function genVirtuaGrouplModuleMaker() {
 			filterFinalKeyPath([...dir_kps, ...Object.values(m_id_kp)]),
 			dir_kps
 		);
-
-		console.log(finalKps, m_id_kp, m_kp_id, dir_kps, "&&&&&&&&&&&&&&&&7");
 
 		[...finalKps, ...not_default_kps].map(
 			kp => (m_empty_id_kp[genID()] = kp)
@@ -162,6 +188,7 @@ function genCode(
 	isIntergration
 ) {
 	// Generate the code of virtual-module.
+
 	const summary = {};
 	const import_lines = [];
 
@@ -173,8 +200,13 @@ function genCode(
 
 	dualEach(m_f_ids)((f, ids) => {
 		for (const id of ids) {
-			if (m_id_isDefault[id]) {
-				importer_default[f] = id;
+			if (id in m_id_isDefault) {
+				if (m_id_isDefault[id]) {
+					importer_default[f] = id;
+				} else {
+					const kp = m_id_kp[id];
+					exports_empty.push([id, kp]);
+				}
 			} else if (!isIntergration) {
 				const kp = m_id_kp[id];
 				const name = basename(kp);
@@ -185,19 +217,22 @@ function genCode(
 		}
 	});
 
-	console.log(
-		m_id_isDefault,
-		m_empty_id_kp,
-		"UUUUUUUU",
-		m_id_kp,
-		importer_named
-	);
 	dualEach(importer_default)((f, id) =>
 		import_lines.push(`import ${id} from "${to_flagpath(f)}";`)
 	);
+
+	dualEach(m_empty_id_kp)((id, kp) => exports_empty.push([id, kp]));
+
+	const exports_empty_raw = exports_empty
+		.map(([id]) => `${id} = {}`)
+		.join(",");
+
+	const code_empty_defintion =
+		exports_empty_raw === "" ? "" : `const ${exports_empty_raw};\n`;
+
 	if (isIntergration) {
 		const code_import = import_lines.join("\n") + "\n";
-		dualEach(assign(m_id_kp, m_empty_id_kp))((id, kp) =>
+		dualEach(combine(m_id_kp, m_empty_id_kp))((id, kp) =>
 			setByPath(summary, id, kp)
 		);
 		const summary_raw = JSON.stringify(summary).replace(
@@ -210,9 +245,8 @@ function genCode(
 		return [
 			code_import,
 			code_empty_defintion,
-			code_default_export,
-			code_named_exports
-		].join("\n");
+			code_default_export
+		].filter(Boolean).join("\n");
 	}
 
 	dualEach(importer_named)((f, map) => {
@@ -222,16 +256,8 @@ function genCode(
 	});
 
 	dualEach(m_id_kp)((id, kp) => exports_named.push([id, kp]));
-	dualEach(m_empty_id_kp)((id, kp) => exports_empty.push([id, kp]));
 
 	const code_import = import_lines.join("\n") + "\n";
-
-	const exports_empty_raw = exports_empty
-		.map(([id]) => `${id} = {}`)
-		.join(",");
-
-	const code_empty_defintion =
-		exports_empty_raw === "" ? "" : `const ${exports_empty_raw};\n`;
 
 	exports_named.push(...exports_empty);
 

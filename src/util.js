@@ -41,3 +41,5 @@ export const dualEach = o => fn =>
 	Object.entries(o).map(async ([k, v]) => await fn(k, v));
 
 export const lessFirst = (a, b) => (a.length < b.length ? [a, b] : [b, a]);
+
+export const all$p = p => p.constructor === Array ? Promise.all(p) : p;
