@@ -19,11 +19,11 @@ function gen(t) {
 	};
 }
 
-test("combine", async t => {
-	const bundle = await rollup({
-		plugins: [resolve()],
-		input: "main.js"
-	});
-	let { result } = await testBundle(t, bundle);
-	t.deepEqual(result, { answer });
-});
+// test("combine", async t => {
+// 	const bundle = await rollup({
+// 		plugins: [resolve()],
+// 		input: "main.js"
+// 	});
+// 	let { result } = await testBundle(t, bundle);
+// 	t.deepEqual(result, { answer });
+// });

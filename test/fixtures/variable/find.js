@@ -1,1 +1,1 @@
-import { answer } from "$t";
+export { answer } from "$data/x";

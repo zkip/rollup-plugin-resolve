@@ -31,7 +31,7 @@
 		"prepare": "npm run build",
 		"ci:coverage": "nyc npm run test && nyc report --reporter=text-lcov > coverage.lcov",
 		"build": "rollup -c",
-		"test": "ava",
+		"test": "ava --verbose",
 		"coverage": "nyc npm run test",
 		"pretest": "npm run build"
 	},
@@ -45,9 +45,8 @@
 	],
 	"ava": {
 		"files": [
-			"test/**",
+			"test/samples/**",
 			"!test/sample/**",
-			"!test/samples/**",
 			"!test/dist/**",
 			"!test/fixtures/**"
 		]
