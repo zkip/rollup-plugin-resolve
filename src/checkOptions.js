@@ -1,36 +1,67 @@
 import { isAbsolute, join } from "path"
-import { isExists, isDir } from "./util";
+import { isExists, isDir, dualEach, all$p } from "./util";
+import { ResolveError, ERR_OPTION_INVALID } from "./errors";
 
 export default function checkOptions({
-	base,
-	candidateExt = ["js"],
+	base = "",
+	candidateExt = [],
 	variables = {},
+	dirBehaviour = "es6",
 	include,
 	exclude
 }) {
 
-	if (base) {
-		let target;
-		if (isAbsolute(base)) {
-			target = base;
-		} else {
-			target = join(process.cwd(), base)
-		}
-		if (!isExists(target)) {
-			throw new Error(`@zrlps/resolve: The base option must be a valid directory.`);
-		}
-		if (!isDir(target)) {
-			throw new Error(`@zrlps/resolve: The base option must be a directory.`);
-		}
+	const cwd = process.cwd();
+
+	if (!isAbsolute(base)) {
+
+		base = join(cwd, base)
+
+	}
+
+	if (!isExists(base)) {
+
+		throw new ResolveError(ERR_OPTION_INVALID, `The option "base" (${base}) is not resolved.`)
+
+	} else if (!isDir(base)) {
+
+		throw new ResolveError(ERR_OPTION_INVALID, `The option "base" (${base}) must be a directory.`)
+
 	}
 
 	if (candidateExt.constructor !== Array || !candidateExt.reduce((ok, v) => typeof v === "string" && ok, true)) {
-		throw new Error(`@zrlps/resolve: The candidateExt option must be an array of string.`);
+		throw new ResolveError(ERR_OPTION_INVALID, `The option "candidateExt" must be an array of string. Received ${candidateExt}`);
 	}
 
 	if (variables.constructor !== Object) {
-		console.error(`@zrlps/resolve: The variables option must be an Object.`)
+		throw new ResolveError(ERR_OPTION_INVALID, `The option "variables" must be an Object. Received ${variables}`);
 	}
 
-	return { base, variables, candidateExt, include, exclude };
+	if (!(["es6", "collective", "auto"].includes(dirBehaviour))) {
+		throw new ResolveError(ERR_OPTION_INVALID, `The option "dirBehaviour" must be "es6", "collective" or "auto". Received ${dirBehaviour}`);
+	}
+
+	variables = (Object.entries(variables).map(([name, dir]) => {
+
+		let p = dir;
+
+		if (!isAbsolute(dir)) {
+
+			p = join(cwd, dir);
+
+		}
+
+		if (!isExists(p)) {
+
+			throw new ResolveError(ERR_OPTION_INVALID, `The path "${dir}" in option "variables" is not resolved.`)
+
+		}
+
+		return [name, p];
+
+	})).reduce((m, [name, p]) => m.set(name, p), new Map());
+
+	return { base, variables, candidateExt, dirBehaviour, include, exclude };
 }
+
+const o2m = o => new Map(Object.entries(o))
