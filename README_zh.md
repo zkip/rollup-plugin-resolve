@@ -166,12 +166,14 @@ import timeout from "$async/timeout"; // src/util/async/timeout
 
 ###### Internal variables
 
-该插件内置了一些变量，使用者无法更改它们的值，并且不需要使用\$进行引用。
+该插件内置了一些变量，它们不需要使用\$进行引用。
 
--   `~`表示该系统中的环境变量 HOME
+-   `~`表示该系统中的环境变量 HOME，无法更改
+-   `@`表示 base，见`Base import`
 
 ```
 import conf from "~/config.js";
+import conf from "@/config.js";
 ```
 
 ### Integration import
@@ -247,6 +249,7 @@ import f from "~/../../../../../../";
 
 ```typescript
 type Option {
+	base URL.Path
 	dirBehaviour "es6" | "collective" | "auto"
 	variables { key Identity: value URL.Path }
 	candidateExt: []string
