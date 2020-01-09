@@ -1,4 +1,4 @@
-import { join, dirname, resolve } from "path";
+import { join, dirname, resolve, isAbsolute } from "path";
 import { createFilter } from "rollup-pluginutils";
 import { isDir, isExists, tryResolve, first } from "./util";
 import checkOptions from "./checkOptions";
@@ -37,7 +37,7 @@ const parseVirtualID = raw => {
 
 }
 
-const internalVariables = new Set("~", "@");
+const internalVariables = new Set(["~", "@"]);
 
 export default (options = {}) => {
 
@@ -48,7 +48,7 @@ export default (options = {}) => {
 
 	return {
 		name: "resolve",
-		async resolveId(importee) {
+		async resolveId(importee, importer) {
 
 			if (!filter(importee)) return null;
 
@@ -80,6 +80,7 @@ export default (options = {}) => {
 				}
 
 				target = frags.join("/");
+				fullfp = join(prefix, target);
 
 			} else if (firstFrag.startsWith("$")) {
 
@@ -97,14 +98,22 @@ export default (options = {}) => {
 				}
 
 				target = frags.join("/");
+				fullfp = join(prefix, target);
+
+			} else if ([".", ".."].includes(firstFrag)) {
+
+				fullfp = join(dirname(importer), importee);
+
+			} else {
+
+				return null;
+
 			}
 
-			fullfp = join(prefix === "" ? process.cwd() : prefix, target);
+			// fullfp = join(prefix === "" ? process.cwd() : prefix, target);
 
 			let is_exsit = isExists(fullfp);
 			let is_dir = is_exsit && isDir(fullfp);
-
-			// console.log(firstFrag, target, fullfp, prefix, is_exsit, is_dir, "@@@@@@@@@@@@");
 
 			if (is_exsit) {
 
@@ -114,7 +123,7 @@ export default (options = {}) => {
 
 					if (!isIntergration) {
 
-						if (dirBehaviour === "collective" || (dirBehaviour === "auto" && !isES6DirExport(target))) {
+						if (dirBehaviour === "collective" || (dirBehaviour === "auto" && !isES6DirExport(fullfp))) {
 
 							mode = "C";
 
@@ -127,7 +136,7 @@ export default (options = {}) => {
 
 					}
 
-					return genVirtualID(target, mode);
+					return genVirtualID(fullfp, mode);
 
 				} else if (isIntergration) {
 
