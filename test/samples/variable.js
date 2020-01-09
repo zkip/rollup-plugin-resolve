@@ -19,52 +19,52 @@ const gen = t => async (variables, input, answer) => {
 
 };
 
-test("normal", async t => {
+// test("normal", async t => {
 
-	const find = gen(t);
+// 	const find = gen(t);
 
-	await find({
-		"data": "a/b/c",
-	}, "find.js", 91);
+// 	await find({
+// 		"data": "a/b/c",
+// 	}, "find.js", 91);
 
-});
+// });
 
-test("invalid", async t => {
+// test("invalid", async t => {
 
-	const find = gen(t);
+// 	const find = gen(t);
 
-	try {
+// 	try {
 
-		await find({
-			"data": "a/b/d",
-		}, "find.js", 91);
+// 		await find({
+// 			"data": "a/b/d",
+// 		}, "find.js", 91);
 
-		t.fail();
+// 		t.fail();
 
-	} catch ({ code }) {
+// 	} catch ({ code }) {
 
-		t.is(code, "OPTION_INVALID");
+// 		t.is(code, "OPTION_INVALID");
 
-	}
+// 	}
 
-})
+// })
 
-test("missing", async t => {
+// test("missing", async t => {
 
-	const find = gen(t);
+// 	const find = gen(t);
 
-	try {
+// 	try {
 
-		await find({
-			"data3": "a/b/c",
-		}, "find.js", 91);
+// 		await find({
+// 			"data3": "a/b/c",
+// 		}, "find.js", 91);
 
-		t.fail();
+// 		t.fail();
 
-	} catch ({ pluginCode: code }) {
+// 	} catch ({ pluginCode: code }) {
 
-		t.is(code, "VARIABLE_MISSING");
+// 		t.is(code, "VARIABLE_MISSING");
 
-	}
+// 	}
 
-})
+// })

@@ -19,21 +19,21 @@ const gen = t => async (input, answer) => {
 
 };
 
-test("HOME", async t => {
+// test("HOME", async t => {
 
-	const dest = join(process.env.HOME, "x.js");
+// 	const dest = join(process.env.HOME, "x.js");
+// 	const find = gen(t);
 
-	copySync("x.js", dest);
+// 	copySync("x.js", dest);
 
-	try {
+// 	try {
 
-		const find = gen(t);
-		await find("find.js", 11);
+// 		await find("find.js", 11);
 
-	} finally {
+// 	} finally {
 
-		removeSync(dest)
+// 		removeSync(dest)
 
-	}
+// 	}
 
-});
+// });

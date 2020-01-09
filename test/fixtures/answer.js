@@ -1,3 +1,1 @@
-export default {
-	answer: 137
-};
+export const answer = 137;

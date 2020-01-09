@@ -9,66 +9,55 @@ import { all$p } from "../../test/dist/util.cjs";
 
 process.chdir(join(process.cwd(), "test/fixtures/base"));
 
-// const gen = t => async (base, input, answer) => {
-// 	const bundle = await rollup({
-// 		plugins: [resolve({ base })],
-// 		input
-// 	});
-// 	let { result } = await testBundle(t, bundle);
-// 	t.deepEqual(result, { answer });
-// };
+const gen = t => async (base, input, answer) => {
+	const bundle = await rollup({
+		plugins: [resolve({ base })],
+		input
+	});
+	let { module } = await testBundle(t, bundle);
+	t.deepEqual(module.exports.answer, answer);
+};
 
-// test("base default, normal", async t => {
+// test("option default, normal", async t => {
+
 // 	let find = gen(t);
+
 // 	await all$p(
 // 		find(undefined, "find.js", 11),
-// 		find(undefined, "./a/b/find.js", 83)
+// 		find(undefined, "a/b/find.js", 31)
 // 	);
+
 // });
 
-// test("base default, navigator", async t => {
+// test("option default, navigator", async t => {
+
 // 	let find = gen(t);
+
 // 	await all$p(
-// 		find(undefined, "a/b/find_with_prev_default.js", 137),
-// 		find(undefined, "a/find_with_prev_default.js", 73)
+// 		find(undefined, "a/b/find_nav.js", 137),
+// 		find(undefined, "find_nav.js", 11)
 // 	);
+
 // });
 
-// test("[base option: specified] normal", async t => {
-//   let find = gen(t);
-//   await Promise.all([find("a", "a/find.js", 73), find("a/b", "a/find.js", 11)]);
-// });
-// test("[base option: specified] navigator", async t => {
-//   let find = gen(t);
-//   await Promise.all([
-//     find("a", "a/find_with_prev_a.js", 73),
-//     find("a/b", "a/b/find_with_prev_b.js", 137)
-//   ]);
-// });
+// test("option specified, normal", async t => {
 
-// test("[base option: specified, prev] navigator", async t => {
-//   let find = gen(t);
-//   await Promise.all([
-//     find("./a/../", "a/find.js", 83),
-//     find("../", "a/find.js", 137)
-//   ]);
+// 	let find = gen(t);
+
+// 	await all$p(
+// 		find("a/b", "a/b/find.js", 11),
+// 		find("a", "a/b/find.js", 73)
+// 	);
+
 // });
 
-// test("[base option: specified, absolute] navigator", async t => {
-//   let find = gen(t);
+// test("option specified, navigator", async t => {
 
-//   let id = Date.now() + "" + Math.random();
-//   let dest = join(
-//     process.env["HOME"],
-//     "/tmp/@zrlps/rollup-plugin-resolve/test_" + id
-//   );
-//   ensureDirSync(dest);
-//   copySync("./", dest);
+// 	let find = gen(t);
 
-//   await Promise.all([
-//     find(dest, "a/find.js", 137),
-//     find(dest + "/a/../", "a/find.js", 83)
-//   ]);
+// 	await all$p(
+// 		find("a/b", "a/b/find_nav.js", 73),
+// 		find("a", "a/b/find_nav.js", 31)
+// 	);
 
-//   removeSync(dest);
 // });

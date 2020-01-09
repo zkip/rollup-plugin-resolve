@@ -3,32 +3,53 @@ import { join } from "path";
 import { rollup } from "rollup";
 import { testBundle } from "../../util/test";
 import { copySync, ensureDirSync, removeSync } from "fs-extra";
+import nResolve from "@rollup/plugin-node-resolve";
 
 import resolve from "../..";
 
-process.chdir(join(__dirname, "../fixtures/combine"));
+process.chdir(join(process.cwd(), "test/fixtures/combine"));
 
-function gen(t) {
-	return async (base, input, answer) => {
-		const bundle = await rollup({
-			plugins: [resolve({ base })],
-			input
-		});
-		let { result } = await testBundle(t, bundle);
-		t.deepEqual(result, { answer });
-	};
-}
+const gen = t => async (dirBehaviour, input, answer) => {
 
-/*
-	option dirBehaviour: es6 / collective / auto
-	option
-*/
+	const bundle = await rollup({
+		plugins: [resolve({ dirBehaviour }), nResolve()],
+		input
+	});
 
-// test("combine", async t => {
-// 	const bundle = await rollup({
-// 		plugins: [resolve()],
-// 		input: "main.js"
-// 	});
-// 	let { result } = await testBundle(t, bundle);
-// 	t.deepEqual(result, { answer });
+	let { module } = await testBundle(t, bundle);
+	t.is(module.exports.answer, answer);
+
+};
+
+// test("option dirBehaviour default", async t => {
+
+// 	const find = gen(t);
+
+// 	await find(undefined, "es6/find.js", 71);
+
+// });
+
+// test("option dirBehaviour collective", async t => {
+
+// 	const find = gen(t);
+
+// 	await find("collective", "collective/find.js", 109);
+
+// });
+
+test("option dirBehaviour auto", async t => {
+
+	const find = gen(t);
+
+	await find("collective", "auto/find.js", 178);
+
+});
+
+
+// test("collective", async t => {
+
+// 	const find = gen(t);
+
+// 	await find("collective", "collective/find.js", 109);
+
 // });

@@ -19,9 +19,9 @@ const gen = t => async (candidateExt, input, answer) => {
 
 };
 
-test("candidateExt", async t => {
+// test("candidateExt", async t => {
 
-	const find = gen(t);
-	await find(["jsc"], "find.js", 17);
+// 	const find = gen(t);
+// 	await find(["jsc"], "find.js", 17);
 
-});
+// });

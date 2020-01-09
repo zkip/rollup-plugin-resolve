@@ -1,1 +1,3 @@
-export const answer = 31;
+export { answer } from "./b/answer";
+
+export default { answer: 2 }
