@@ -2,7 +2,14 @@ import { promisify } from "util";
 import _glob from "glob";
 import genExportAnalyzer from "./genExportAnalyzer";
 import { ERR_EXPORT_CONFLICT, ResolveError } from "./errors";
-import { validIdent, setByPath, isDir, dualEach, nIntersection } from "./util";
+import {
+	validIdent,
+	setByPath,
+	isDir,
+	dualEach,
+	dualAll,
+	nIntersection
+} from "./util";
 import {
 	join,
 	normalize,
@@ -87,14 +94,10 @@ export default function genVirtuaGrouplModuleMaker() {
 				const exports = await getFlatExports(f);
 				const ids = m_f_ids[f] || new Set();
 
-				// console.log(exports, "(((((((((((");
-
 				m_f_ids[f] = ids;
 
-				const _name_exported = {};
-
 				if (!isIntergration) {
-					dualEach(exports)((p, { names }) => {
+					await dualAll(exports)((p, { names }) => {
 						for (const name of names) {
 							const kp = relative(fp, join(dir_name, name));
 
@@ -163,8 +166,6 @@ export default function genVirtuaGrouplModuleMaker() {
 						m_id_isDefault[id] = exports[f].isDefault;
 					}
 				}
-
-				assign(name_exported, _name_exported);
 			} else {
 				if (isIntergration && validKeyPath(kp)) {
 					dir_kps.push(kp);
@@ -182,7 +183,7 @@ export default function genVirtuaGrouplModuleMaker() {
 		);
 
 		// Generate the code of virtual-module.
-		const code = genCode(
+		const code = await genCode(
 			{ m_f_ids, m_id_kp, m_empty_id_kp, m_id_isDefault },
 			isIntergration
 		);
@@ -199,7 +200,7 @@ export default function genVirtuaGrouplModuleMaker() {
 
 const to_flagpath = f => (isAbsolute(f) ? f : join("@", f));
 
-function genCode(
+async function genCode(
 	{ m_f_ids, m_id_kp, m_empty_id_kp, m_id_isDefault },
 	isIntergration
 ) {
@@ -214,7 +215,7 @@ function genCode(
 	const exports_named = [];
 	const exports_empty = [];
 
-	dualEach(m_f_ids)((f, ids) => {
+	await dualAll(m_f_ids)((f, ids) => {
 		for (const id of ids) {
 			if (id in m_id_isDefault) {
 				if (m_id_isDefault[id]) {
@@ -233,11 +234,11 @@ function genCode(
 		}
 	});
 
-	dualEach(importer_default)((f, id) =>
+	await dualAll(importer_default)((f, id) =>
 		import_lines.push(`import ${id} from "${to_flagpath(f)}";`)
 	);
 
-	dualEach(m_empty_id_kp)((id, kp) => exports_empty.push([id, kp]));
+	await dualAll(m_empty_id_kp)((id, kp) => exports_empty.push([id, kp]));
 
 	const exports_empty_raw = exports_empty
 		.map(([id]) => `${id} = {}`)
@@ -248,7 +249,7 @@ function genCode(
 
 	if (isIntergration) {
 		const code_import = import_lines.join("\n") + "\n";
-		dualEach(combine(m_id_kp, m_empty_id_kp))((id, kp) =>
+		await dualAll(combine(m_id_kp, m_empty_id_kp))((id, kp) =>
 			setByPath(summary, id, kp)
 		);
 		const summary_raw = JSON.stringify(summary).replace(
@@ -263,13 +264,13 @@ function genCode(
 			.join("\n");
 	}
 
-	dualEach(importer_named)((f, map) => {
+	await dualAll(importer_named)((f, map) => {
 		const rel_f = to_flagpath(f);
 		const raw = map.map(([name, id]) => `${name} as ${id}`).join(", ");
 		import_lines.push(`import { ${raw} } from "${rel_f}";`);
 	});
 
-	dualEach(m_id_kp)((id, kp) => exports_named.push([id, kp]));
+	await dualAll(m_id_kp)((id, kp) => exports_named.push([id, kp]));
 
 	const code_import = import_lines.join("\n") + "\n";
 
