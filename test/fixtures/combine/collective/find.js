@@ -1,3 +1,1 @@
-import { answer as asw, o } from "./lib";
-
-export const answer = asw + o.answer;
+export { index as answer } from "../lib_es6";

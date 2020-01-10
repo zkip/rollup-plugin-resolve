@@ -52,13 +52,17 @@ export const last = arraylike => arraylike[arraylike.length - 1];
 
 export const first = arraylike => arraylike[0];
 
-export const dualEach = o => fn =>
-	Object.entries(o).map(async ([k, v]) => await fn(k, v));
+export const dualEach = o => fn => Object.entries(o).map(async ([k, v]) => await fn(k, v))
 
 export const lessFirst = (a, b) => (a.length < b.length ? [a, b] : [b, a]);
 
 export const all$p = (...ps) => Promise.all(ps);
 
+export const dualMap = o => fn => {
+	return all$p(dualEach(o)(fn)).catch(err => {
+		console.log(err, "++++++++++++++");
+	})
+}
 
 export function nIntersection(...arrs) {
 

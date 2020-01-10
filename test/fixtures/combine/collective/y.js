@@ -1,4 +1,4 @@
-import { change } from "./x";
+import { change } from "../lib/x";
 
 change();
 change();

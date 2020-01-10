@@ -110,9 +110,10 @@ export default function genVirtuaGrouplModuleMaker() {
 								);
 							}
 
-							if (!name_exported[name]) {
-								name_exported[name] = true;
+							if (name_exported[name]) {
 								continue;
+							} else {
+								name_exported[name] = true;
 							}
 
 							// named export has a higher priority
@@ -191,6 +192,7 @@ export default function genVirtuaGrouplModuleMaker() {
 		isIntergration
 			? cache_intergration.set(fp, module)
 			: cache_combine.set(fp, module);
+
 		return module;
 	};
 }

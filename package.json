@@ -30,10 +30,10 @@
 		"clean": "rm -rf dist .nyc_output",
 		"prepare": "npm run build",
 		"ci:coverage": "nyc npm run test && nyc report --reporter=text-lcov > coverage.lcov",
-		"build": "rollup -c",
+		"build": "rollup -c; clear;clear;",
 		"test": "ava --verbose",
 		"coverage": "nyc npm run test",
-		"pretest": "npm run build"
+		"pretest": "npm run pretest:fns && npm run build"
 	},
 	"repository": {
 		"type": "git",
