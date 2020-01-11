@@ -20,29 +20,31 @@ const gen = t => async (dirBehaviour, input, answer) => {
 	t.is(module.exports.answer, answer);
 };
 
-test("option dirBehaviour default (es6)", async t => {
-	const find = gen(t);
+// test("option dirBehaviour default (es6)", async t => {
+// 	const find = gen(t);
 
-	await find(undefined, "es6/find.js", 37);
-});
+// 	await find(undefined, "es6/find.js", 37);
+// });
 
-test("option dirBehaviour collective", async t => {
-	const find = gen(t);
+// test("option dirBehaviour collective", async t => {
+// 	const find = gen(t);
 
-	await find("collective", "collective/find.js", 37);
-});
+// 	await find("collective", "collective/find.js", 37);
+// });
 
-test("option dirBehaviour auto", async t => {
-	const find = gen(t);
+// test("option dirBehaviour auto", async t => {
+// 	const find = gen(t);
 
-	await find("auto", "auto/find.js", 88);
-});
+// 	await find("auto", "auto/find.js", 88);
+// });
 
 test("collective, export conflict", async t => {
 	const find = gen(t);
 	try {
 		await find("collective", "collective/conflict.js", 109);
-	} catch ({ pluginCode: code }) {
+	} catch (err) {
+		const { pluginCode: code } = err;
 		t.is(code, "EXPORT_CONFLICT");
+		console.log(err, "%%%%%%%%%%%%%%%%%%");
 	}
 });

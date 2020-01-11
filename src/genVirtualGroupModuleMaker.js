@@ -31,7 +31,7 @@ const filterFinalKeyPath = kps =>
 		kps.reduce((ok, kpa) => ok && (kp === kpa || !kpa.startsWith(kp)), true)
 	);
 
-export default function genVirtuaGrouplModuleMaker() {
+export default function genVirtuaGrouplModuleMaker({ candidateExt }) {
 	// filepath: VirtualCombineModule
 	// The filepath is absolute or relative with cwd.
 	const cache_combine = new Map();
@@ -41,7 +41,7 @@ export default function genVirtuaGrouplModuleMaker() {
 
 	const { getFlatExports } = genExportAnalyzer();
 
-	return async (fp, isIntergration) => {
+	async function genVirtualGroupModule(fp, isIntergration) {
 		if (!isDir(fp)) return null;
 
 		let module = isIntergration
@@ -91,7 +91,10 @@ export default function genVirtuaGrouplModuleMaker() {
 			const kp = relative(fp, is_dir ? f : join(dir_name, filename));
 
 			if (!is_dir) {
-				const exports = await getFlatExports(f);
+				const exports = await getFlatExports(f, candidateExt, {
+					getVirtualModule: genVirtualGroupModule
+				});
+
 				const ids = m_f_ids[f] || new Set();
 
 				m_f_ids[f] = ids;
@@ -194,8 +197,12 @@ export default function genVirtuaGrouplModuleMaker() {
 			? cache_intergration.set(fp, module)
 			: cache_combine.set(fp, module);
 
+		// console.log(module);
+
 		return module;
-	};
+	}
+
+	return genVirtualGroupModule;
 }
 
 const to_flagpath = f => (isAbsolute(f) ? f : join("@", f));

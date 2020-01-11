@@ -1,9 +1,16 @@
 import { promisify } from "util";
-import { readFile as _readFile, existsSync } from "fs";
+import { readFile as _readFile } from "fs";
 import acorn from "acorn";
-import { dualEach, tryResolve, lessFirst } from "./util";
+import {
+	dualEach,
+	tryResolve,
+	lessFirst,
+	isExists,
+	isDir,
+	dualAll
+} from "./util";
 import { relative, resolve, dirname, join, isAbsolute } from "path";
-import { ERR_CANNOT_RESOLVE } from "./errors";
+import { ERR_CANNOT_RESOLVE, ResolveError } from "./errors";
 
 const readFile = promisify(_readFile);
 
@@ -12,12 +19,13 @@ export default function genExportAnalyzer() {
 	// The filepath is absolute or relative with cwd
 	const cache_exports = new Map();
 
-	const getExports = async fp => {
+	const getExports = async (fp, code) => {
 		if (cache_exports.has(fp)) {
 			return cache_exports.get(fp);
 		}
 
-		const code = await readFile(fp, "utf8");
+		if (!code) code = await readFile(fp, "utf8");
+
 		const option = { sourceType: "module" };
 		const localExports = [];
 		const relayExports = {};
@@ -69,7 +77,11 @@ export default function genExportAnalyzer() {
 		return exportAnalysisResult;
 	};
 
-	const getFlatExports = async (fp, candidateExt = ["js"]) => {
+	const getFlatExports = async (
+		fp,
+		candidateExt = [],
+		{ getVirtualModule } = {}
+	) => {
 		const exports = {
 			/* { filename(absolute path): { names Set, isDefault bool } }*/
 		};
@@ -79,11 +91,13 @@ export default function genExportAnalyzer() {
 			let exported = exports[f] || { isDefault: false, names: new Set() };
 
 			if (!exports[f]) {
-				let {
+				const is_dir = isDir(f);
+
+				const {
 					isDefaultExport,
 					localExports,
 					relayExports
-				} = await getExports(f);
+				} = await getExports(f, is_dir && (await getVirtualModule(f)));
 
 				const { names } = exported;
 
@@ -104,23 +118,27 @@ export default function genExportAnalyzer() {
 				exported.isDefault = isDefaultExport;
 				exports[f] = exported;
 
-				await Promise.all(
-					dualEach(relayExports)(async (f2, names) => {
-						const p = tryResolve(
-							relative(process.cwd(), resolve(dirname(f), f2)),
-							candidateExt
-						);
+				await dualAll(relayExports)(async (f2, names) => {
+					let p = resolve(dirname(f), f2);
+					let _p = p;
 
-						if (!p) {
+					if (isExists(p)) {
+						return await find(p, names, f);
+					} else {
+						p = tryResolve(p, candidateExt);
+
+						const is_dir = isDir(p);
+
+						if (p && !is_dir) {
+							return await find(p, names, f);
+						} else {
 							throw new ResolveError(
 								ERR_CANNOT_RESOLVE,
-								`Cannot resolve the path "${f}"`
+								`Cannot resolve the path "${_p}"`
 							);
 						}
-
-						return await find(p, names, f);
-					})
-				);
+					}
+				});
 			}
 
 			if (importer !== "") {
