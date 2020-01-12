@@ -14,8 +14,8 @@ function gen(t) {
 			plugins: [resolve({ base })],
 			input
 		});
-		let { result } = await testBundle(t, bundle);
-		t.deepEqual(result, { answer });
+		let { module } = await testBundle(t, bundle);
+		if (answer) t.is(module.exports.answer, answer);
 	};
 }
 

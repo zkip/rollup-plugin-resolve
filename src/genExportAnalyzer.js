@@ -19,7 +19,7 @@ export default function genExportAnalyzer() {
 	// The filepath is absolute or relative with cwd
 	const cache_exports = new Map();
 
-	const getExports = async (fp, code) => {
+	const getExports = async (fp, { code }) => {
 		if (cache_exports.has(fp)) {
 			return cache_exports.get(fp);
 		}
@@ -127,9 +127,7 @@ export default function genExportAnalyzer() {
 					} else {
 						p = tryResolve(p, candidateExt);
 
-						const is_dir = isDir(p);
-
-						if (p && !is_dir) {
+						if (p && !isDir(p)) {
 							return await find(p, names, f);
 						} else {
 							throw new ResolveError(

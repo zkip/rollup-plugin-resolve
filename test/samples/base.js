@@ -18,46 +18,35 @@ const gen = t => async (base, input, answer) => {
 	t.deepEqual(module.exports.answer, answer);
 };
 
-// test("option default, normal", async t => {
+test("default, normal", async t => {
+	let find = gen(t);
 
-// 	let find = gen(t);
+	await all$p(
+		find(undefined, "find.js", 11),
+		find(undefined, "a/b/find.js", 31)
+	);
+});
 
-// 	await all$p(
-// 		find(undefined, "find.js", 11),
-// 		find(undefined, "a/b/find.js", 31)
-// 	);
+test("default, navigator", async t => {
+	let find = gen(t);
 
-// });
+	await all$p(
+		find(undefined, "a/b/find_nav.js", 137),
+		find(undefined, "find_nav.js", 11)
+	);
+});
 
-// test("option default, navigator", async t => {
+test("specified, normal", async t => {
+	let find = gen(t);
 
-// 	let find = gen(t);
+	await all$p(find("a/b", "a/b/find.js", 11), find("a", "a/b/find.js", 73));
+});
 
-// 	await all$p(
-// 		find(undefined, "a/b/find_nav.js", 137),
-// 		find(undefined, "find_nav.js", 11)
-// 	);
+test("specified, navigator", async t => {
+	let find = gen(t);
 
-// });
-
-// test("option specified, normal", async t => {
-
-// 	let find = gen(t);
-
-// 	await all$p(
-// 		find("a/b", "a/b/find.js", 11),
-// 		find("a", "a/b/find.js", 73)
-// 	);
-
-// });
-
-// test("option specified, navigator", async t => {
-
-// 	let find = gen(t);
-
-// 	await all$p(
-// 		find("a/b", "a/b/find_nav.js", 73),
-// 		find("a", "a/b/find_nav.js", 31)
-// 	);
-
-// });
+	await all$p(
+		find("a/b", "a/b/find_nav.js", 73),
+		find("a", "a/b/find_nav.js", 31)
+	);
+});

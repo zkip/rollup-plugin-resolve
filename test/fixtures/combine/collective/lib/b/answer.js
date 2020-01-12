@@ -1,3 +1,3 @@
-export default 53;
+export const answer2 = 17;
 
-export const answer = 107;
+export default 53 + answer2;

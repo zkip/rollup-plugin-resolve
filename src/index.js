@@ -49,7 +49,9 @@ export default (options = {}) => {
 	} = checkOptions(options);
 	const filter = createFilter(include, exclude);
 
-	const getVirtualGroupModule = genVirtuaGrouplModuleMaker({ candidateExt });
+	const getVirtualGroupModule = genVirtuaGrouplModuleMaker({
+		candidateExt: extensions
+	});
 
 	return {
 		name: "resolve",

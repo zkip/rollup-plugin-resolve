@@ -41,7 +41,7 @@ export default function genVirtuaGrouplModuleMaker({ candidateExt }) {
 
 	const { getFlatExports } = genExportAnalyzer();
 
-	async function genVirtualGroupModule(fp, isIntergration) {
+	async function getVirtualModule(fp, isIntergration) {
 		if (!isDir(fp)) return null;
 
 		let module = isIntergration
@@ -66,6 +66,9 @@ export default function genVirtuaGrouplModuleMaker({ candidateExt }) {
 		const m_id_f = {
 			/* id: filepath */
 		};
+		const m_kp_ps = {
+			/* path: keypath Set*/
+		};
 
 		const m_empty_id_kp = {};
 
@@ -78,7 +81,6 @@ export default function genVirtuaGrouplModuleMaker({ candidateExt }) {
 		const dir_kps = [];
 		const not_default_kps = [];
 
-		const name_exported = {};
 		// { name: Set }
 		const name_source = {};
 
@@ -92,7 +94,7 @@ export default function genVirtuaGrouplModuleMaker({ candidateExt }) {
 
 			if (!is_dir) {
 				const exports = await getFlatExports(f, candidateExt, {
-					getVirtualModule: genVirtualGroupModule
+					getVirtualModule
 				});
 
 				const ids = m_f_ids[f] || new Set();
@@ -106,24 +108,32 @@ export default function genVirtuaGrouplModuleMaker({ candidateExt }) {
 
 							const ns = name_source[name] || new Set();
 							name_source[name] = ns;
-							ns.add(p);
 
-							if (!isIntergration && ns.size > 1) {
+							const kpps = m_kp_ps[p] || new Set();
+							m_kp_ps[p] = kpps;
+
+							// named export has a higher priority
+							const id = m_kp_id[kp] || genID();
+
+							// kpps.add(kp);
+
+							// console.log(
+							// 	relative(process.cwd(), f),
+							// 	relative(process.cwd(), p),
+							// 	id,
+							// 	kp,
+							// 	"@@@@@@@@@@@@@@"
+							// );
+
+							if (!m_id_isDefault[id] && f !== p) ns.add(p);
+
+							if (ns.size > 1) {
 								// TODO: need more information for error
 								throw new ResolveError(
 									ERR_EXPORT_CONFLICT,
 									`Export conflict.`
 								);
 							}
-
-							if (name_exported[name]) {
-								continue;
-							} else {
-								name_exported[name] = true;
-							}
-
-							// named export has a higher priority
-							const id = m_kp_id[kp] || genID();
 
 							if (id_imported.has(id)) {
 								let f = m_id_f[id];
@@ -151,6 +161,7 @@ export default function genVirtuaGrouplModuleMaker({ candidateExt }) {
 								m_id_f[id] = f;
 								m_kp_id[kp] = id;
 								m_id_kp[id] = kp;
+								m_kp_isDefault[kp] = true;
 								m_id_isDefault[id] = true;
 							} else {
 								not_default_kps.push(kp);
@@ -202,7 +213,7 @@ export default function genVirtuaGrouplModuleMaker({ candidateExt }) {
 		return module;
 	}
 
-	return genVirtualGroupModule;
+	return getVirtualModule;
 }
 
 const to_flagpath = f => (isAbsolute(f) ? f : join("@", f));

@@ -1,3 +1,1 @@
-export { answer } from "./b/answer";
-
-export default { answer: 2 }
+export { answer } from "./b";
