@@ -1,19 +1,24 @@
 import test from "ava";
-import { rollup } from "rollup";
-import resolve from "../..";
 import { join } from "path";
+import { rollup } from "rollup";
 import { testBundle } from "../../util/test";
+import nResolve from "@rollup/plugin-node-resolve";
 
-process.chdir(join(process.cwd(), "test/fixtures/sample"));
+import resolve from "../..";
 
-test("run", async t => {
+process.chdir(join(process.cwd(), "test/fixtures/combine"));
+
+const gen = t => async (dirBehaviour, input, answer) => {
 	const bundle = await rollup({
-		plugins: [resolve()],
-		input: "main.js"
+		plugins: [resolve({ dirBehaviour }), nResolve()],
+		input
 	});
 
-	let { result, module } = await testBundle(t, bundle);
-	console.log(result, module);
-	// console.log(await testBundle(t, bundle));
-	// console.log(bundle)
+	let { module } = await testBundle(t, bundle);
+	if (answer) t.is(module.exports.answer, answer);
+};
+
+test("run", async t => {
+	const find = gen(t);
+	await find("collective", "collective/test.js", 5);
 });

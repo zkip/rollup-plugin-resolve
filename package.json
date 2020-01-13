@@ -45,8 +45,7 @@
 	],
 	"ava": {
 		"files": [
-			"test/samples/**",
-			"!test/sample/**",
+			"test/sample/**",
 			"!test/dist/**",
 			"!test/fixtures/**"
 		]

@@ -41,7 +41,9 @@ export default function genVirtuaGrouplModuleMaker({ candidateExt }) {
 
 	const { getFlatExports } = genExportAnalyzer();
 
-	async function getVirtualModule(fp, isIntergration) {
+	async function getVirtualModule(fp, isIntergration, isBeing) {
+		if (!isBeing)
+			console.log("--------------------------------------", fp);
 		if (!isDir(fp)) return null;
 
 		let module = isIntergration
@@ -92,10 +94,16 @@ export default function genVirtuaGrouplModuleMaker({ candidateExt }) {
 			const is_dir = isDir(f);
 			const kp = relative(fp, is_dir ? f : join(dir_name, filename));
 
+			if (!isBeing)
+				console.log("XXXXXXXXXXXXXXXXXXXXXXXX", fp, f, filepaths);
+
+
 			if (!is_dir) {
 				const exports = await getFlatExports(f, candidateExt, {
-					getVirtualModule
+					getVirtualModule: (fp, isIntergration) => getVirtualModule(fp, isIntergration, true)
 				});
+				if (!isBeing)
+					console.log("OOOOOOOOOOOOOOOOOOOOOOOOO", f, exports);
 
 				const ids = m_f_ids[f] || new Set();
 
@@ -113,9 +121,14 @@ export default function genVirtuaGrouplModuleMaker({ candidateExt }) {
 							m_kp_ps[p] = kpps;
 
 							// named export has a higher priority
-							const id = m_kp_id[kp] || genID();
+							let id = m_kp_id[kp] || genID();
 
-							// kpps.add(kp);
+							if (!isBeing) {
+								// console.log("%%%%%%%%%%%%%");
+								// console.log(p, names);
+							}
+
+							kpps.add(kp);
 
 							// console.log(
 							// 	relative(process.cwd(), f),
@@ -125,7 +138,7 @@ export default function genVirtuaGrouplModuleMaker({ candidateExt }) {
 							// 	"@@@@@@@@@@@@@@"
 							// );
 
-							if (!m_id_isDefault[id] && f !== p) ns.add(p);
+							if (!m_id_isDefault[id] && f !== p) { ns.add(p); }
 
 							if (ns.size > 1) {
 								// TODO: need more information for error
@@ -161,7 +174,7 @@ export default function genVirtuaGrouplModuleMaker({ candidateExt }) {
 								m_id_f[id] = f;
 								m_kp_id[kp] = id;
 								m_id_kp[id] = kp;
-								m_kp_isDefault[kp] = true;
+								// m_kp_isDefault[kp] = true;
 								m_id_isDefault[id] = true;
 							} else {
 								not_default_kps.push(kp);
@@ -195,6 +208,8 @@ export default function genVirtuaGrouplModuleMaker({ candidateExt }) {
 		[...finalKps, ...not_default_kps].map(
 			kp => (m_empty_id_kp[genID()] = kp)
 		);
+		if (!isBeing)
+			console.log(m_f_ids, m_id_kp, m_id_f, "@@@@@@@@@@@@", fp);
 
 		// Generate the code of virtual-module.
 		const code = await genCode(
@@ -208,8 +223,13 @@ export default function genVirtuaGrouplModuleMaker({ candidateExt }) {
 			? cache_intergration.set(fp, module)
 			: cache_combine.set(fp, module);
 
-		// console.log(module);
-
+		if (!isBeing) {
+			// console.log("////////////////////////////////");
+			// console.log(cache_combine);
+			// console.log(module);
+			// console.log(m_kp_ps);
+			console.log("++++++++++++++++++++++++++++++++++++++++++", fp);
+		}
 		return module;
 	}
 

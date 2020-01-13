@@ -17,7 +17,7 @@ const gen = t => async (candidateExt, input, answer) => {
 	t.is(module.exports.answer, answer);
 };
 
-test("specified", async t => {
-	const find = gen(t);
-	await find(["jsc"], "find.js", 17);
-});
+// test("specified", async t => {
+// 	const find = gen(t);
+// 	await find(["jsc"], "find.js", 17);
+// });
