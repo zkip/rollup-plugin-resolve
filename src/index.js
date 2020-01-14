@@ -49,7 +49,7 @@ export default (options = {}) => {
 	} = checkOptions(options);
 	const filter = createFilter(include, exclude);
 
-	const getVirtualGroupModule = genVirtuaGrouplModuleMaker({
+	const { getVirtualModule } = genVirtuaGrouplModuleMaker({
 		candidateExt: extensions
 	});
 
@@ -149,7 +149,7 @@ export default (options = {}) => {
 			if (parsedVID) {
 				const { mode, target } = parsedVID;
 
-				return await getVirtualGroupModule(target, mode === "I");
+				return await getVirtualModule(target, mode === "I");
 			}
 		}
 	};

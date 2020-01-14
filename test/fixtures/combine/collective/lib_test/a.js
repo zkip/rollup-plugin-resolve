@@ -1,1 +1,1 @@
-export { answer as answer1 } from "./x";
+export { answer as answer1 } from "./xc";
