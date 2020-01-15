@@ -2,7 +2,7 @@
 
 ![npm (scoped)](https://img.shields.io/npm/v/@zrlps/rollup-plugin-resolve) [![codecov](https://codecov.io/gh/zkip/rollup-plugin-resolve/branch/zero/graph/badge.svg)](https://codecov.io/gh/zkip/rollup-plugin-resolve)
 
-Resolve plugin for rollupjs.
+rollupjs 的 resolve 插件。
 
 这个插件让你可以定义一个项目的起点，使得你可以拥有额外的搜寻文件的模式。
 它提供了：
@@ -17,7 +17,7 @@ Resolve plugin for rollupjs.
 
 这种方式允许你使用一个自定义的起点，在导入时使用`@`来表示起点的位置。这样一来我们就拥有了一个可以参照的起点。
 
-我们可以在 options 中设置它表示的起点，通过指定`option.base`选项来达到这一点。`option.base`可以设定为任意有效路径，除非它是绝对路径，否则它将表示为以`process.cwd()`为起点的相对路径。请确保它的指向是一个有效的目录，否则它会在正常工作之前报告错误。
+我们可以在 `选项` 中设置它表示的起点，通过指定`option.base`选项来达到这一点。`option.base`可以设定为任意有效路径，除非它是绝对路径，否则它将表示为以`process.cwd()`为起点的相对路径。请确保它的指向是一个有效的目录，否则它会在正常工作之前报告错误。
 
 > 注意：@表示占位符，与任何路径连接必须使用`/`进行分隔，这样也可以和 npm 包管理体系中的 scoped package 区分开来。
 
