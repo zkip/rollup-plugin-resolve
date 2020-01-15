@@ -26,7 +26,8 @@
 	"scripts": {
 		"b:test": "rollup -c test.rollup.config.js",
 		"clean": "rm -rf dist .nyc_output",
-		"ci:coverage": "nyc npm run test && nyc report --reporter=text-lcov > coverage.lcov",
+		"report-coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov -t 9e28c7d8-3f15-46f6-888a-bc37143e30d6",
+		"ci:coverage": "nyc npm run test && npm run report-coverage ",
 		"prepare": "npm run build",
 		"build": "rollup -c; clear;clear;",
 		"test": "ava",
