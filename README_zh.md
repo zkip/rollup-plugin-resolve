@@ -186,7 +186,7 @@ import timeout from "$async/timeout"; // src/util/async/timeout
 
 ###### Internal variables
 
-该插件内置了一些变量，它们不需要使用\$进行引用。
+该插件内置了一些变量，它们不需要使用`$`进行引用。
 
 -   `~`表示该系统中的环境变量 HOME，无法更改
 -   `@`表示 base，见`Base import`
