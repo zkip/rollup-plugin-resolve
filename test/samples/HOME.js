@@ -17,15 +17,15 @@ const gen = t => async (input, answer) => {
 	t.is(module.exports.answer, answer);
 };
 
-// test("HOME", async t => {
-// 	const dest = join(process.env.HOME, "x.js");
-// 	const find = gen(t);
+test("HOME", async t => {
+	const dest = join(process.env.HOME, "x.js");
+	const find = gen(t);
 
-// 	copySync("x.js", dest);
+	copySync("x.js", dest);
 
-// 	try {
-// 		await find("find.js", 11);
-// 	} finally {
-// 		removeSync(dest);
-// 	}
-// });
+	try {
+		await find("find.js", 11);
+	} finally {
+		removeSync(dest);
+	}
+});

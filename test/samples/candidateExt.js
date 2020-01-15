@@ -14,10 +14,20 @@ const gen = t => async (candidateExt, input, answer) => {
 	});
 
 	let { module } = await testBundle(t, bundle);
-	t.is(module.exports.answer, answer);
+	answer && t.is(module.exports.answer, answer);
 };
 
-// test("specified", async t => {
-// 	const find = gen(t);
-// 	await find(["jsc"], "find.js", 17);
-// });
+test("specified", async t => {
+	const find = gen(t);
+	await find(["jsc"], "find.js", 17);
+});
+
+test("try resolve only hit file.", async t => {
+	const find = gen(t);
+	try {
+		await find([], "fake.js");
+		t.fail();
+	} catch ({ code }) {
+		t.is(code, "UNRESOLVED_IMPORT");
+	}
+});

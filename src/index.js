@@ -49,7 +49,7 @@ export default (options = {}) => {
 	} = checkOptions(options);
 	const filter = createFilter(include, exclude);
 
-	const { getVirtualModule } = genVirtuaGrouplModuleMaker({
+	const { getVirtualModule, clear } = genVirtuaGrouplModuleMaker({
 		candidateExt: extensions
 	});
 
@@ -57,8 +57,6 @@ export default (options = {}) => {
 		name: "resolve",
 		async resolveId(importee, importer) {
 			if (!filter(importee)) return null;
-
-			// console.log(importee, importer, "$$$$$$$$$$$$$$$$$$$$$");
 
 			let target = importee;
 			let fullfp = "";
@@ -69,7 +67,7 @@ export default (options = {}) => {
 				isIntergration = true;
 			}
 
-			const frags = importee.split("/");
+			const frags = target.split("/");
 			const firstFrag = frags.shift();
 			let prefix = "";
 
@@ -98,7 +96,7 @@ export default (options = {}) => {
 				target = frags.join("/");
 				fullfp = join(prefix, target);
 			} else if ([".", ".."].includes(firstFrag)) {
-				fullfp = join(dirname(importer), importee);
+				fullfp = join(dirname(importer), target);
 			} else {
 				return null;
 			}
@@ -141,6 +139,10 @@ export default (options = {}) => {
 
 				return null;
 			}
+		},
+
+		generateBundle() {
+			clear();
 		},
 
 		async load(id) {

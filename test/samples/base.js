@@ -1,8 +1,8 @@
 import test from "ava";
 import { join } from "path";
 import { rollup } from "rollup";
-import { testBundle } from "../../util/test";
 import { copySync, ensureDirSync, removeSync } from "fs-extra";
+import { testBundle } from "../../util/test";
 
 import resolve from "../..";
 import { all$p } from "../../test/dist/util.cjs";
@@ -18,35 +18,48 @@ const gen = t => async (base, input, answer) => {
 	t.deepEqual(module.exports.answer, answer);
 };
 
-// test("default, normal", async t => {
-// 	let find = gen(t);
+test("default, normal", async t => {
+	let find = gen(t);
 
-// 	await all$p(
-// 		find(undefined, "find.js", 11),
-// 		find(undefined, "a/b/find.js", 31)
-// 	);
-// });
+	await all$p(
+		find(undefined, "find.js", 11),
+		find(undefined, "a/b/find.js", 31)
+	);
+});
 
-// test("default, navigator", async t => {
-// 	let find = gen(t);
+test("default, navigator", async t => {
+	let find = gen(t);
 
-// 	await all$p(
-// 		find(undefined, "a/b/find_nav.js", 137),
-// 		find(undefined, "find_nav.js", 11)
-// 	);
-// });
+	await all$p(
+		find(undefined, "a/b/find_nav.js", 137),
+		find(undefined, "find_nav.js", 11)
+	);
+});
 
-// test("specified, normal", async t => {
-// 	let find = gen(t);
+test("specified, normal", async t => {
+	let find = gen(t);
 
-// 	await all$p(find("a/b", "a/b/find.js", 11), find("a", "a/b/find.js", 73));
-// });
+	await all$p(find("a/b", "a/b/find.js", 11), find("a", "a/b/find.js", 73));
+});
 
-// test("specified, navigator", async t => {
-// 	let find = gen(t);
+test("specified, navigator", async t => {
+	let find = gen(t);
 
-// 	await all$p(
-// 		find("a/b", "a/b/find_nav.js", 73),
-// 		find("a", "a/b/find_nav.js", 31)
-// 	);
-// });
+	await all$p(
+		find("a/b", "a/b/find_nav.js", 73),
+		find("a", "a/b/find_nav.js", 31)
+	);
+});
+
+test("specified, absolute", async t => {
+	const dest = "/tmp/ddd";
+	let find = gen(t);
+
+	copySync("./should_be_moved", dest);
+
+	try {
+		await find("/tmp/ddd", "find.js", 101);
+	} finally {
+		removeSync(dest);
+	}
+});

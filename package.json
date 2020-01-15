@@ -25,15 +25,15 @@
 	},
 	"scripts": {
 		"b:test": "rollup -c test.rollup.config.js",
-		"pretest:fns": "npm run b:test; clear;clear;",
-		"test:fns": "ava test/fns/** --verbose",
 		"clean": "rm -rf dist .nyc_output",
-		"prepare": "npm run build",
 		"ci:coverage": "nyc npm run test && nyc report --reporter=text-lcov > coverage.lcov",
+		"prepare": "npm run build",
 		"build": "rollup -c; clear;clear;",
-		"test": "ava --verbose",
-		"coverage": "nyc npm run test",
-		"pretest": "npm run pretest:fns && npm run build"
+		"test": "ava",
+		"dev:test": "ava --verbose",
+		"predev:test": "npm run b:test && npm run build",
+		"pretest": "npm run b:test && npm run build",
+		"coverage": "nyc npm run test"
 	},
 	"repository": {
 		"type": "git",
@@ -45,9 +45,17 @@
 	],
 	"ava": {
 		"files": [
-			"test/sample/**",
+			"test/**/*",
+			"test/samples/**",
+			"!test/sample/**",
 			"!test/dist/**",
 			"!test/fixtures/**"
+		]
+	},
+	"nyc": {
+		"include": [
+			"src/**/*.js",
+			"dist/**/*.js"
 		]
 	},
 	"author": "zkip <zkiplan@qq.com>",
