@@ -1,0 +1,1 @@
+export { answer } from "@/a/../a/b/../b/answer";

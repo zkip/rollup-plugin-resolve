@@ -1,49 +1,69 @@
 {
-  "name": "@zrlps/rollup-plugin-resolve",
-  "version": "0.0.8",
-  "description": "Resolve plugin for rollupjs.",
-  "main": "dist/rollup-plugin-resolve.cjs.js",
-  "module": "dist/rollup-plugin-resolve.es.js",
-  "jsnext:main": "dist/rollup-plugin-node-resolve.es.js",
-  "dependencies": {
-    "glob": "^7.1.4",
-    "rollup-pluginutils": "^2.8.1"
-  },
-  "devDependencies": {
-    "acorn": "^7.1.0",
-    "ava": "^2.4.0",
-    "fs-extra": "^8.1.0",
-    "nyc": "^14.1.1",
-    "rollup": "^1.27.13"
-  },
-  "scripts": {
-    "clean": "rm -rf dist .nyc_output",
-    "prepare": "npm run build",
-    "ci:coverage": "nyc npm run test && nyc report --reporter=text-lcov > coverage.lcov",
-    "build": "rollup -c",
-    "test": "ava",
-    "coverage": "nyc npm run test",
-    "pretest": "npm run build"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/zrlps/rollup-plugin-resolve.git"
-  },
-  "keywords": [
-    "rollup-plugin",
-    "resolve"
-  ],
-  "ava": {
-    "files": [
-      "test/**",
-      "!test/fixtures/**"
-    ]
-  },
-  "author": "zkip <zkiplan@qq.com>",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/zrlps/rollup-plugin-resolve/issues"
-  },
-  "homepage": "https://github.com/zrlps/rollup-plugin-resolve#readme",
-  "readme": "README.md"
+	"name": "@zrlps/rollup-plugin-resolve",
+	"version": "0.0.8",
+	"description": "Resolve plugin for rollupjs.",
+	"main": "dist/rollup-plugin-resolve.cjs.js",
+	"module": "dist/rollup-plugin-resolve.es.js",
+	"jsnext:main": "dist/rollup-plugin-node-resolve.es.js",
+	"dependencies": {
+		"glob": "^7.1.4",
+		"rollup-pluginutils": "^2.8.1"
+	},
+	"devDependencies": {
+		"@rollup/plugin-node-resolve": "^6.0.0",
+		"acorn": "^7.1.0",
+		"ava": "^2.4.0",
+		"fs-extra": "^8.1.0",
+		"is-var-name": "^2.0.0",
+		"nyc": "^14.1.1",
+		"rollup": "^1.27.13",
+		"rollup-plugin-commonjs": "^10.1.0",
+		"rollup-plugin-node-resolve": "^5.2.0"
+	},
+	"peerDependencies": {
+		"rollup": "^1.27.13"
+	},
+	"scripts": {
+		"test": "ava",
+		"dev:test": "ava --verbose",
+		"predev:test": "npm run b:test && npm run build",
+		"b:test": "rollup -c test.rollup.config.js",
+		"pretest": "npm run b:test && npm run build",
+		"clean": "rm -rf dist .nyc_output",
+		"report-coverage": "nyc report --reporter=text-lcov > coverage.lcov && codecov -t 9e28c7d8-3f15-46f6-888a-bc37143e30d6",
+		"ci:coverage": "nyc npm run test && npm run report-coverage ",
+		"build": "rollup -c; clear;clear;",
+		"prepare": "npm run build",
+		"coverage": "nyc npm run test"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/zrlps/rollup-plugin-resolve.git"
+	},
+	"keywords": [
+		"rollup-plugin",
+		"resolve"
+	],
+	"ava": {
+		"files": [
+			"test/**/*",
+			"test/samples/**",
+			"!test/sample/**",
+			"!test/dist/**",
+			"!test/fixtures/**"
+		]
+	},
+	"nyc": {
+		"include": [
+			"src/**/*.js",
+			"dist/**/*.js"
+		]
+	},
+	"author": "zkip <zkiplan@qq.com>",
+	"license": "ISC",
+	"bugs": {
+		"url": "https://github.com/zrlps/rollup-plugin-resolve/issues"
+	},
+	"homepage": "https://github.com/zrlps/rollup-plugin-resolve#readme",
+	"readme": "README.md"
 }

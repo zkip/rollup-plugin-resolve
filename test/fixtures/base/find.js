@@ -1,3 +1,1 @@
-import answer from "@/a/b/answer";
-
-result = answer;
+export { answer } from "@/a/b/answer";

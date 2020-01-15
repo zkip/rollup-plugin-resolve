@@ -1,0 +1,1 @@
+export { index as answer } from "../lib_es6";
