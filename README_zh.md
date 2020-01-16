@@ -28,7 +28,7 @@ PROJECT
 	rollup.config.js
 	src
 		util
-        	path.js
+			path.js
 			math.js
 		app
 			main.js
