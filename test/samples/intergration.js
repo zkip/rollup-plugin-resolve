@@ -19,12 +19,12 @@ const gen = t => async (input, answer) => {
 	if (answer) t.deepEqual(module.exports.answer, answer);
 };
 
-test("normal)", async t => {
+test("normal", async t => {
 	const find = gen(t);
 	await find("main.js", { b: 19, ccc: { x: {} } });
 });
 
-test("empty)", async t => {
+test("empty", async t => {
 	const find = gen(t);
 	await find("empty.js", { b: { c: {} } });
 });
