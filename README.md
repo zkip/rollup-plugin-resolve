@@ -22,7 +22,7 @@ npm install --save-dev @zrlps/rollup-plugin-resolve
 
 #### Attention
 
-This plugin usually works with other resolver such as [node-resolve](https://github.com/rollup/plugins/tree/master/packages/node-resolve).When configuring, you need to place the plug-in before these plug-ins so that it can get a higher priority.
+This plugin usually works with other resolver such as [node-resolve](https://github.com/rollup/plugins/tree/master/packages/node-resolve).When configuring, you need to place the plugin before these plugins so that it can get a higher priority.
 
 ```
 // rollup.config.js
