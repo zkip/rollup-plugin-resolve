@@ -13,6 +13,27 @@ Rollup 的 resolve 插件。
 -   Variable 自定义变量
 -   Navigator 导航
 
+## 安装
+
+```
+npm install --save-dev @zrlps/rollup-plugin-resolve
+```
+
+#### 注意事项
+
+该插件通常与其它resolver一起工作比如[node-resolve](https://github.com/rollup/plugins/tree/master/packages/node-resolve)等。配置时需要将该插件置于这些插件之前以便让它获得更高的优先级。
+
+```
+// rollup.config.js
+import zResolve from "@zrlps/rollup-plugin-resolve";
+import resolve from "@rollup/plugins-node-resolve";
+export default {
+	...
+	plugins: [ zResolve(...), resolve(...) ],
+	...
+}
+```
+
 ## Base import
 
 这种方式允许你使用一个自定义的起点，在导入时使用`@`来表示起点的位置。这样一来我们就拥有了一个可以参照的起点。
@@ -265,15 +286,8 @@ import e from "{$data/../animal}";
 import f from "~/../../../../../../";
 ```
 
-### type Option
+## License
 
-```typescript
-type Option {
-	base URL.Path
-	dirBehaviour "es6" | "collective" | "auto"
-	variables { key Identity: value URL.Path }
-	candidateExt: []string
-}
-```
+[MIT.](/LICENSE)
 
 [es]: https://tc39.es/ecma262/#prod-IdentifierName
