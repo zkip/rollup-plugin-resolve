@@ -60,7 +60,7 @@
 		]
 	},
 	"author": "zkip <zkiplan@qq.com>",
-	"license": "ISC",
+	"license": "MIT",
 	"bugs": {
 		"url": "https://github.com/zrlps/rollup-plugin-resolve/issues"
 	},
