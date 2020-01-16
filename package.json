@@ -5,6 +5,11 @@
 	"main": "dist/rollup-plugin-resolve.cjs.js",
 	"module": "dist/rollup-plugin-resolve.es.js",
 	"jsnext:main": "dist/rollup-plugin-node-resolve.es.js",
+	"files": [
+		"dist",
+		"README.md",
+		"LICENSE"
+	],
 	"dependencies": {
 		"glob": "^7.1.4",
 		"rollup-pluginutils": "^2.8.1"
