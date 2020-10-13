@@ -2,7 +2,7 @@
 
 ![npm (scoped)](https://img.shields.io/npm/v/@zrlps/rollup-plugin-resolve) [![codecov](https://codecov.io/gh/zkip/rollup-plugin-resolve/branch/zero/graph/badge.svg)](https://codecov.io/gh/zkip/rollup-plugin-resolve)
 
-Resolve plugin for rollupjs.
+Resolve plugin for Rollup.
 
 This plugin allows to you define a base point of a project so that you can have addtional patterns for searching files.
 
@@ -14,7 +14,28 @@ It provides the following patterns:
 -   Variable
 -   Navigator
 
-### Base import
+## Installation
+
+```
+npm install --save-dev @zrlps/rollup-plugin-resolve
+```
+
+#### Attention
+
+This plugin usually works with other resolver such as [node-resolve](https://github.com/rollup/plugins/tree/master/packages/node-resolve).When configuring, you need to place the plugin before these plugins so that it can get a higher priority.
+
+```
+// rollup.config.js
+import zResolve from "@zrlps/rollup-plugin-resolve";
+import resolve from "@rollup/plugin-node-resolve";
+export default {
+	...
+	plugins: [ zResolve(...), resolve(...) ],
+	...
+}
+```
+
+## Base import
 
 This pattern allows you to use a custom base point, and use `@` to indicate its position the base point when importing. In this way, we have a base point that we can refer to.
 
@@ -28,8 +49,8 @@ Look at this case:
 PROJECT
 	rollup.config.js
 	src
-        util
-        	path.js
+		util
+			path.js
 			math.js
 		app
 			main.js
@@ -53,7 +74,7 @@ import math from "@/util/math";
 import config from "@/../rollup.config.js";
 ```
 
-### Combine import
+## Combine import
 
 Comine import allows you to import a folder. Its semantics are determined by the option `option.dirBehaviour`.
 
@@ -63,11 +84,11 @@ Its options are any of the following enumeration values:
 -   "collective"
 -   "auto"
 
-###### `es6`
+### `es6`
 
 This is the default folder import behavior of ES6. It looks for a file of index.js in the target folder and exports it. If it is not found, it will cause an error.
 
-###### `collective`
+### `collective`
 
 It combines the exports of all valid files in the target folder to export together, and the default exports in valid files will be named corresponding file names for export. When it is the same as the identity of named exports in other valid files in the folder, named exports have a higher priority.
 
@@ -114,7 +135,7 @@ x // 1
 ```
 
 About the valid files:
-If the name of the file conforms to the "ecma262 identifier naming specification"<sup>[es]</sup> and the extension is valid, then it is a valid file.
+If the name of the file conforms to the `ecma262 identifier naming specification`<sup>[es]</sup> and the extension is valid, then it is a valid file.
 
 About the valid extensions:
 The valid extension name is any one of `"js","mjs","node","json"`, and you can specify an additional extension name through `option.candidateExt`.
@@ -133,17 +154,17 @@ import { x } from "./pkg"
 x // 3
 ```
 
-###### `auto`
+### `auto`
 
 This method will automatically select between ES6 and collective. If there is a file of index.js in the target folder, it will follow the semantics of ES6, otherwise it will follow the semantics of collective.
 
 > Note: when using this option, the import syntax will have multiple semantics. The user must handle the files in the target folder carefully, otherwise it may bring unexpected results. Therefore, this option is not recommended.
 
-### Variable import
+## Variable import
 
 You can set some path variables in options and use `$` to reference these variables when importing. The plug-in will check these variables before normal operation. If it finds invalid path variables, it will cause errors.
 
-Use `option.variables` to set variables. It is an Object. Key represents the name of variable ("ecma262 identifier naming specification"<sup>[es]</sup> compliant), and value represents the corresponding path. Like base import, unless it is an absolute path, it represents the relative path starting from "process.cwd()".
+Use `option.variables` to set variables. It is an Object. Key represents the name of variable (`ecma262 identifier naming specification`<sup>[es]</sup> compliant), and value represents the corresponding path. Like base import, unless it is an absolute path, it represents the relative path starting from "process.cwd()".
 
 Use case:
 
@@ -186,7 +207,7 @@ import heart from "$icons/heart.ico"; // asset/icons/heart.ico
 import timeout from "$async/timeout"; // src/util/async/timeout
 ```
 
-###### Internal variables
+### Internal variables
 
 The plug-in has built-in variables that do not need to be referenced with `$`.
 
@@ -198,7 +219,7 @@ import conf from "~/config.js";
 import conf from "@/config.js";
 ```
 
-### Integration import
+## Integration import
 
 `Integration import` will recursively organize the default exports of the target folder and all valid files in the valid folder into one object for export. Similar to combine, the default exports in the file will be named as the name of the file. If there is no default export in the file, it will still be regarded as an empty object `{}`. Similarly, invalid files and folders will be ignored. Note that when a folder is ignored, all files under the folder and its subfolders will not be exported.
 
@@ -254,7 +275,7 @@ import Animal from "{@/data/Animal}";
 */
 ```
 
-### Navigator
+## Navigator
 
 You can use navigational paths everywhere (in all of the above modes), but placeholders (like `$`,`@` etc.) and variables must be first.
 
@@ -266,3 +287,9 @@ import d from "$res/../icon/d.ico;
 import e from "{$data/../animal}";
 import f from "~/../../../../../../";
 ```
+
+## License
+
+[MIT.](/LICENSE)
+
+[es]: https://tc39.es/ecma262/#prod-IdentifierName

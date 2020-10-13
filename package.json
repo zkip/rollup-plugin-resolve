@@ -1,10 +1,15 @@
 {
 	"name": "@zrlps/rollup-plugin-resolve",
-	"version": "0.0.8",
+	"version": "0.1.3",
 	"description": "Resolve plugin for rollupjs.",
 	"main": "dist/rollup-plugin-resolve.cjs.js",
 	"module": "dist/rollup-plugin-resolve.es.js",
 	"jsnext:main": "dist/rollup-plugin-node-resolve.es.js",
+	"files": [
+		"dist",
+		"README.md",
+		"LICENSE"
+	],
 	"dependencies": {
 		"glob": "^7.1.4",
 		"rollup-pluginutils": "^2.8.1"
@@ -60,7 +65,7 @@
 		]
 	},
 	"author": "zkip <zkiplan@qq.com>",
-	"license": "ISC",
+	"license": "MIT",
 	"bugs": {
 		"url": "https://github.com/zrlps/rollup-plugin-resolve/issues"
 	},

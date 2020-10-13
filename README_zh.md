@@ -2,7 +2,7 @@
 
 ![npm (scoped)](https://img.shields.io/npm/v/@zrlps/rollup-plugin-resolve) [![codecov](https://codecov.io/gh/zkip/rollup-plugin-resolve/branch/zero/graph/badge.svg)](https://codecov.io/gh/zkip/rollup-plugin-resolve)
 
-rollupjs 的 resolve 插件。
+Rollup 的 resolve 插件。
 
 这个插件让你可以定义一个项目的起点，使得你可以拥有额外的搜寻文件的模式。
 它提供了：
@@ -13,7 +13,28 @@ rollupjs 的 resolve 插件。
 -   Variable 自定义变量
 -   Navigator 导航
 
-### Base import
+## 安装
+
+```
+npm install --save-dev @zrlps/rollup-plugin-resolve
+```
+
+#### 注意事项
+
+该插件通常与其它resolver一起工作比如[node-resolve](https://github.com/rollup/plugins/tree/master/packages/node-resolve)等。配置时需要将该插件置于这些插件之前以便让它获得更高的优先级。
+
+```
+// rollup.config.js
+import zResolve from "@zrlps/rollup-plugin-resolve";
+import resolve from "@rollup/plugins-node-resolve";
+export default {
+	...
+	plugins: [ zResolve(...), resolve(...) ],
+	...
+}
+```
+
+## Base import
 
 这种方式允许你使用一个自定义的起点，在导入时使用`@`来表示起点的位置。这样一来我们就拥有了一个可以参照的起点。
 
@@ -27,8 +48,8 @@ rollupjs 的 resolve 插件。
 PROJECT
 	rollup.config.js
 	src
-        util
-        	path.js
+		util
+			path.js
 			math.js
 		app
 			main.js
@@ -52,7 +73,7 @@ import math from "@/util/math";
 import config from "@/../rollup.config.js";
 ```
 
-### Combine import
+## Combine import
 
 Comine import 允许你导入一个文件夹。它的语义由选项 `option.dirBehaviour` 来决定。
 
@@ -62,11 +83,11 @@ Comine import 允许你导入一个文件夹。它的语义由选项 `option.dir
 -   "collective"
 -   "auto"
 
-###### `es6`
+### `es6`
 
 这是 es6 默认的文件夹导入行为。它会寻找目标文件夹中的一个 index.js 的文件并将该文件导出，如果没有找到则会导致错误。
 
-###### `collective`
+### `collective`
 
 它将目标文件夹中的所有有效的文件中的导出组合在一起进行导出，并且有效文件中的默认导出会被命名为对应的文件名进行导出，当它与该文件夹中的其它有效文件中的具名导出的标识相同时，具名导出具有更高的优先级。
 
@@ -131,13 +152,13 @@ import { x } from "./pkg"
 x // 3
 ```
 
-###### `auto`
+### `auto`
 
 这种方式会在 es6 和 collective 中自动进行选择，如果目标文件夹中有一个 index.js 的文件，它将遵循 es6 的语义，否则它遵循 collective 的语义。
 
 > 注意：在使用这个选项时，导入语法将具有多重语义，使用者必须小心的处理目标文件夹中的文件，否则可能带来非预期的结果，因此不建议使用这个选项。
 
-### Variable import
+## Variable import
 
 你可以在 options 中设定一些路径变量，在导入时使用`$`来引用这些变量。该插件在正常工作前会对这些变量进行检查，如果发现无效的路径变量，将会导致错误。
 
@@ -184,19 +205,19 @@ import heart from "$icons/heart.ico"; // asset/icons/heart.ico
 import timeout from "$async/timeout"; // src/util/async/timeout
 ```
 
-###### Internal variables
+### Internal variables
 
 该插件内置了一些变量，它们不需要使用`$`进行引用。
 
 -   `~`表示该系统中的环境变量 HOME，无法更改
 -   `@`表示 base，见`Base import`
 
-```
+```js
 import conf from "~/config.js";
 import conf from "@/config.js";
 ```
 
-### Integration import
+## Integration import
 
 Integration import 会递归地将目标文件夹以及有效文件夹中的所有有效文件的默认导出组织成一个对象进行导出，与 Combine 类似，文件中的默认导出将会被命名为该文件的名字，如果文件中没有默认导出，那么它会被仍然会被视作导出为空对象`{}`。同样的，无效的文件和文件夹会被忽略，需要注意的是，当文件夹被忽略时，该文件夹及其子文件夹下所有的文件都不会被导出。
 
@@ -252,7 +273,7 @@ import Animal from "{@/data/Animal}";
 */
 ```
 
-### Navigator
+## Navigator
 
 在任何地方（以上的所有模式中），你都可以使用导航式的路径来表示，但是占位符和变量必须处于第一位。
 
@@ -265,15 +286,8 @@ import e from "{$data/../animal}";
 import f from "~/../../../../../../";
 ```
 
-### type Option
+## License
 
-```typescript
-type Option {
-	base URL.Path
-	dirBehaviour "es6" | "collective" | "auto"
-	variables { key Identity: value URL.Path }
-	candidateExt: []string
-}
-```
+[MIT.](/LICENSE)
 
 [es]: https://tc39.es/ecma262/#prod-IdentifierName
