@@ -29,6 +29,7 @@
 		"rollup": "^1.27.13"
 	},
 	"scripts": {
+		"test:raw": "yarn build && node test/samples/_test.js",
 		"test": "ava",
 		"dev:test": "ava --verbose",
 		"predev:test": "npm run b:test && npm run build",
