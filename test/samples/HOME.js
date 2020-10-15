@@ -7,17 +7,17 @@ import resolve from "../..";
 
 process.chdir(join(process.cwd(), "test/fixtures/HOME"));
 
-const gen = t => async (input, answer) => {
+const gen = (t) => async (input, answer) => {
 	const bundle = await rollup({
 		plugins: [resolve()],
-		input
+		input,
 	});
 
 	let { module } = await testBundle(t, bundle);
 	t.is(module.exports.answer, answer);
 };
 
-test("HOME", async t => {
+test("HOME", async (t) => {
 	const dest = join(process.env.HOME, "x.js");
 	const find = gen(t);
 

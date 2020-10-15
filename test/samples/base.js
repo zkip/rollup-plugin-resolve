@@ -9,16 +9,16 @@ import { all$p } from "../../test/dist/util.cjs";
 
 process.chdir(join(process.cwd(), "test/fixtures/base"));
 
-const gen = t => async (base, input, answer) => {
+const gen = (t) => async (base, input, answer) => {
 	const bundle = await rollup({
 		plugins: [resolve({ base })],
-		input
+		input,
 	});
 	let { module } = await testBundle(t, bundle);
 	t.deepEqual(module.exports.answer, answer);
 };
 
-test("default, normal", async t => {
+test("default, normal", async (t) => {
 	let find = gen(t);
 
 	await all$p(
@@ -27,7 +27,7 @@ test("default, normal", async t => {
 	);
 });
 
-test("default, navigator", async t => {
+test("default, navigator", async (t) => {
 	let find = gen(t);
 
 	await all$p(
@@ -36,13 +36,13 @@ test("default, navigator", async t => {
 	);
 });
 
-test("specified, normal", async t => {
+test("specified, normal", async (t) => {
 	let find = gen(t);
 
 	await all$p(find("a/b", "a/b/find.js", 11), find("a", "a/b/find.js", 73));
 });
 
-test("specified, navigator", async t => {
+test("specified, navigator", async (t) => {
 	let find = gen(t);
 
 	await all$p(
@@ -51,7 +51,7 @@ test("specified, navigator", async t => {
 	);
 });
 
-test("specified, absolute", async t => {
+test("specified, absolute", async (t) => {
 	const dest = "/tmp/ddd";
 	let find = gen(t);
 

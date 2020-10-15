@@ -8,34 +8,34 @@ import { removeSync, copySync } from "fs-extra";
 
 process.chdir(join(process.cwd(), "test/fixtures/variable"));
 
-const gen = t => async (variables, input, answer) => {
+const gen = (t) => async (variables, input, answer) => {
 	const bundle = await rollup({
 		plugins: [resolve({ variables })],
-		input
+		input,
 	});
 
 	let { module } = await testBundle(t, bundle);
 	t.is(module.exports.answer, answer);
 };
 
-test("normal", async t => {
+test("normal", async (t) => {
 	const find = gen(t);
 
 	await find(
 		{
-			data: "a/b/c"
+			data: "a/b/c",
 		},
 		"find.js",
 		91
 	);
 });
 
-test("invalid", async t => {
+test("invalid", async (t) => {
 	const find = gen(t);
 	try {
 		await find(
 			{
-				data: "a/b/d"
+				data: "a/b/d",
 			},
 			"find.js",
 			91
@@ -47,12 +47,12 @@ test("invalid", async t => {
 	}
 });
 
-test("missing", async t => {
+test("missing", async (t) => {
 	const find = gen(t);
 	try {
 		await find(
 			{
-				data3: "a/b/c"
+				data3: "a/b/c",
 			},
 			"find.js",
 			91
@@ -64,15 +64,14 @@ test("missing", async t => {
 	}
 });
 
-test("absolute", async t => {
-
+test("absolute", async (t) => {
 	const dest = `/tmp/rollup/@zrlps/resolve/test/variable$${Math.random()}`;
 	copySync("./should_be_moved", dest);
 	const find = gen(t);
 	try {
 		await find(
 			{
-				data: dest
+				data: dest,
 			},
 			"find.js",
 			11

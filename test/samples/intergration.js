@@ -9,27 +9,27 @@ import resolve from "../..";
 
 process.chdir(join(__dirname, "../fixtures/intergration"));
 
-const gen = t => async (input, answer) => {
+const gen = (t) => async (input, answer) => {
 	const bundle = await rollup({
 		plugins: [resolve(), nResolve()],
-		input
+		input,
 	});
 
 	let { module } = await testBundle(t, bundle);
 	if (answer) t.deepEqual(module.exports.answer, answer);
 };
 
-test("normal", async t => {
+test("normal", async (t) => {
 	const find = gen(t);
 	await find("main.js", { b: 19, ccc: { x: {} } });
 });
 
-test("empty", async t => {
+test("empty", async (t) => {
 	const find = gen(t);
 	await find("empty.js", { b: { c: {} } });
 });
 
-test("not works for file.", async t => {
+test("not works for file.", async (t) => {
 	const find = gen(t);
 	try {
 		await find("file.js");
