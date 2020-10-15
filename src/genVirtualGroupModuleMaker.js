@@ -65,7 +65,10 @@ export default function genVirtuaGrouplModuleMaker() {
 			const dir_name = dirname(f);
 			const filename = basename(f, extname(f));
 			const is_dir = isDir(f);
-			const kp = relative(fp, is_dir ? f : join(dir_name, filename));
+			const kp = relative(
+				fp,
+				is_dir ? f : join(dir_name, filename)
+			).replace("\\", "/");
 
 			if (!is_dir) {
 				const { isDefault, exports } = await getExports(f);
