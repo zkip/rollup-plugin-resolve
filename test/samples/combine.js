@@ -8,9 +8,9 @@ import resolve from "../..";
 
 process.chdir(join(process.cwd(), "test/fixtures/combine"));
 
-const gen = (t) => async (dirBehaviour, input, answer) => {
+const gen = (t, options = {}) => async (dirBehaviour, input, answer) => {
 	const bundle = await rollup({
-		plugins: [resolve({ dirBehaviour }), nResolve()],
+		plugins: [resolve({ dirBehaviour, ...options }), nResolve()],
 		input,
 	});
 
@@ -21,6 +21,20 @@ const gen = (t) => async (dirBehaviour, input, answer) => {
 test("dirBehaviour default (es6)", async (t) => {
 	const find = gen(t);
 	await find(undefined, "es6/find.js", 37);
+});
+
+test("dirBehaviour default (es6), with base", async (t) => {
+	const find = gen(t, { base: "./" });
+	await find(undefined, "es6/find_with_base.js", 37);
+});
+
+test("dirBehaviour default (es6), with variable", async (t) => {
+	const find = gen(t, {
+		variables: {
+			root: "es6/root",
+		},
+	});
+	await find(undefined, "es6/find_with_variable.js", 19);
 });
 
 test("dirBehaviour collective", async (t) => {
