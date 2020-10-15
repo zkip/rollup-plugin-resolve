@@ -1,6 +1,8 @@
-# rollup-plugin-resolve
+# rollup-plugin-resolve 
 
 ![npm (scoped)](https://img.shields.io/npm/v/@zrlps/rollup-plugin-resolve) [![codecov](https://codecov.io/gh/zkip/rollup-plugin-resolve/branch/zero/graph/badge.svg)](https://codecov.io/gh/zkip/rollup-plugin-resolve)
+
+[简体中文](./README_zh.md) | English
 
 Resolve plugin for Rollup.
 
