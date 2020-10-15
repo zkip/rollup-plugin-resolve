@@ -1,11 +1,21 @@
-import resolve from "@rollup/plugin-node-resolve"
+import resolve from "@rollup/plugin-node-resolve";
 
 export default {
 	input: "src/index.js",
-	external: ["path", "fs", "util", "crypto", "glob", "rollup-pluginutils", "acorn"],
-	plugins: [resolve({
-		// preferBuiltins: true,
-	})],
+	external: [
+		"path",
+		"fs",
+		"util",
+		"crypto",
+		"glob",
+		"rollup-pluginutils",
+		"acorn",
+	],
+	plugins: [
+		resolve({
+			// preferBuiltins: true,
+		}),
+	],
 	output: [
 		{
 			file: "dist/rollup-plugin-resolve.cjs.js",
@@ -18,6 +28,6 @@ export default {
 			format: "es",
 			exports: "named",
 			sourcemap: true,
-		}
-	]
+		},
+	],
 };

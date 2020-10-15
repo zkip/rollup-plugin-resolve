@@ -2,25 +2,13 @@ import { promisify } from "util";
 import _glob from "glob";
 import genExportAnalyzer from "./genExportAnalyzer";
 import { ERR_EXPORT_CONFLICT, ResolveError } from "./errors";
-import {
-	validIdent,
-	setByPath,
-	isDir,
-	dualAll,
-} from "./util";
-import {
-	join,
-	normalize,
-	dirname,
-	relative,
-	basename,
-	extname,
-} from "path";
+import { validIdent, setByPath, isDir, dualAll } from "./util";
+import { join, normalize, dirname, relative, basename, extname } from "path";
 
 const glob = promisify(_glob);
 
 const entries = Object.entries;
-const validKeyPath = kp =>
+const validKeyPath = (kp) =>
 	kp.split("/").reduce((t, k) => validIdent(k) && t, true);
 
 export default function genVirtuaGrouplModuleMaker() {
@@ -59,14 +47,14 @@ export default function genVirtuaGrouplModuleMaker() {
 
 		const genID = ((count = 0) => () => `_${count++}`)();
 
-		const _filepaths = await glob(join(fp, isIntergration ? "/**" : "/*"))
+		const _filepaths = await glob(join(fp, isIntergration ? "/**" : "/*"));
 
 		const filepaths = _filepaths.reduce((fps, f) => {
 			for (const [fa] of fps.entries()) {
 				if (fa === f) continue;
 				fa.startsWith(f) && fps.delete(f);
 			}
-			return fps
+			return fps;
 		}, new Set(_filepaths));
 
 		const kpExported = new Set();
@@ -112,7 +100,6 @@ export default function genVirtuaGrouplModuleMaker() {
 							m_kp_id[kp] = id;
 							(m_f_ids[f] = m_f_ids[f] || new Set()).add(id);
 						}
-
 					});
 
 					if (validKeyPath(kp) && !m_kp_id[kp]) {
@@ -152,14 +139,17 @@ export default function genVirtuaGrouplModuleMaker() {
 		}
 
 		// Generate the code of virtual-module.
-		const code = await genCode({
-			m_empty,
-			m_all,
-			m_f_ids,
-			m_defaults,
-			m_id_name,
-			m_kp_id
-		}, !isIntergration);
+		const code = await genCode(
+			{
+				m_empty,
+				m_all,
+				m_f_ids,
+				m_defaults,
+				m_id_name,
+				m_kp_id,
+			},
+			!isIntergration
+		);
 
 		module = { code };
 
@@ -176,24 +166,20 @@ export default function genVirtuaGrouplModuleMaker() {
 			cache_combine.clear();
 			cache_intergration.clear();
 			exportAnalayzer_clear();
-		}
+		},
 	};
 }
 
-async function genCode({
-	m_f_ids,
-	m_defaults,
-	m_id_name,
-	m_empty,
-	m_all,
-	m_kp_id,
-}, isMinor) {
+async function genCode(
+	{ m_f_ids, m_defaults, m_id_name, m_empty, m_all, m_kp_id },
+	isMinor
+) {
 	// Generate the code of virtual-module.
 
 	const import_named_frag = (
 		await dualAll(m_f_ids)((f, ids) => {
-			const transform = ids =>
-				ids.map(id => `${m_id_name[id]} as ${id}`).join(", ");
+			const transform = (ids) =>
+				ids.map((id) => `${m_id_name[id]} as ${id}`).join(", ");
 			return `import { ${transform(Array.from(ids))} } from "${f}";`;
 		})
 	).join("\n");
@@ -202,34 +188,43 @@ async function genCode({
 		await dualAll(m_defaults)((id, f) => `import ${id} from "${f}";`)
 	).join("\n");
 
-	const declarate_frag = m_empty.size === 0 ? "" : "const $;".replace(
-		"$",
-		Array.from(m_empty)
-			.map(id => `${id} = {}`)
-			.join(", ")
-	);
+	const declarate_frag =
+		m_empty.size === 0
+			? ""
+			: "const $;".replace(
+					"$",
+					Array.from(m_empty)
+						.map((id) => `${id} = {}`)
+						.join(", ")
+			  );
 
 	const export_all_frag = !m_all
 		? ""
 		: Array.from(m_all)
-			.map(f => `export * from "${f}";`)
-			.join("\n");
+				.map((f) => `export * from "${f}";`)
+				.join("\n");
 
 	const export_default_frag = !m_kp_id
 		? ""
 		: "export default $;".replace(
-			"$",
-			JSON.stringify(
-				entries(m_kp_id).reduce(
-					(summary, [kp, id]) => (
-						setByPath(summary, id, kp), summary
-					),
-					{}
-				)
-			).replace(/"([^"]+)":"([^"]+)"/g, `"$1": $2`)
-		);
+				"$",
+				JSON.stringify(
+					entries(m_kp_id).reduce(
+						(summary, [kp, id]) => (
+							setByPath(summary, id, kp), summary
+						),
+						{}
+					)
+				).replace(/"([^"]+)":"([^"]+)"/g, `"$1": $2`)
+		  );
 
-	const export_named_frag = !isMinor ? "" : (await dualAll(m_defaults)(id => `export { ${id} as ${m_id_name[id]} };`)).join("\n");
+	const export_named_frag = !isMinor
+		? ""
+		: (
+				await dualAll(m_defaults)(
+					(id) => `export { ${id} as ${m_id_name[id]} };`
+				)
+		  ).join("\n");
 
 	return [
 		import_named_frag,
@@ -237,7 +232,7 @@ async function genCode({
 		declarate_frag,
 		export_all_frag,
 		export_named_frag,
-		export_default_frag
+		export_default_frag,
 	]
 		.filter(Boolean)
 		.join("\n");

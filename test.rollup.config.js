@@ -9,8 +9,8 @@ export default [
 			{
 				file: "test/dist/util.cjs.js",
 				format: "cjs",
-				sourcemap: true
-			}
-		]
-	}
+				sourcemap: true,
+			},
+		],
+	},
 ];

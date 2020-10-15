@@ -53,6 +53,6 @@ export default function genExportAnalyzer() {
 		getExports,
 		clear() {
 			cache_exports.clear();
-		}
+		},
 	};
 }

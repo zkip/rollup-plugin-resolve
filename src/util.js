@@ -29,24 +29,24 @@ export const tryResolve = (target = "", exts = []) => {
 	return null;
 };
 
-export const isDir = fp => fs.statSync(fp).isDirectory();
+export const isDir = (fp) => fs.statSync(fp).isDirectory();
 
-export const isExists = fp => fs.existsSync(fp);
+export const isExists = (fp) => fs.existsSync(fp);
 
-export const validIdent = ident => isVarName(ident);
+export const validIdent = (ident) => isVarName(ident);
 
-export const last = arraylike => arraylike[arraylike.length - 1];
+export const last = (arraylike) => arraylike[arraylike.length - 1];
 
-export const first = arraylike => arraylike[0];
+export const first = (arraylike) => arraylike[0];
 
-export const dualEach = o => fn =>
+export const dualEach = (o) => (fn) =>
 	Object.entries(o).map(async ([k, v]) => await fn(k, v));
 
 export const lessFirst = (a, b) => (a.length < b.length ? [a, b] : [b, a]);
 
 export const all$p = (...ps) => Promise.all(ps);
 
-export const dualAll = o => fn => all$p(...dualEach(o)(fn));
+export const dualAll = (o) => (fn) => all$p(...dualEach(o)(fn));
 
 export function nIntersection(...arrs) {
 	const ok = new Map();

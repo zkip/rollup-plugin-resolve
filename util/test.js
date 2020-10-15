@@ -18,7 +18,7 @@ const getCode = async (bundle, outputOptions, allFiles = false) => {
 	return code;
 };
 
-const getImports = async bundle => {
+const getImports = async (bundle) => {
 	if (bundle.imports) {
 		return bundle.imports;
 	}
@@ -35,7 +35,7 @@ const getImports = async bundle => {
 const testBundle = async (t, bundle, args = {}) => {
 	const { output } = await bundle.generate({
 		exports: "named",
-		format: "cjs"
+		format: "cjs",
 	});
 	const [{ code }] = output;
 	const module = { exports: {} };
@@ -44,7 +44,7 @@ const testBundle = async (t, bundle, args = {}) => {
 		"exports",
 		"require",
 		"t",
-		...Object.keys(args)
+		...Object.keys(args),
 	].concat(`let result;\n\n${code}\n\nreturn result;`);
 
 	// eslint-disable-next-line no-new-func
@@ -66,5 +66,5 @@ const testBundle = async (t, bundle, args = {}) => {
 module.exports = {
 	getCode,
 	getImports,
-	testBundle
+	testBundle,
 };

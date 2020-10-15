@@ -8,11 +8,11 @@ import genVirtuaGrouplModuleMaker from "./genVirtualGroupModuleMaker";
 import {
 	ResolveError,
 	ERR_INTERGRATION_TARGET,
-	ERR_VARIABLE_MISSING
+	ERR_VARIABLE_MISSING,
 } from "./errors";
 
 // more details from https://nodejs.org/api/modules.html#modules_folders_as_modules
-const isES6DirExport = dirpath =>
+const isES6DirExport = (dirpath) =>
 	!!tryResolve(join(dirpath, "index"), ["js", "node"]);
 
 // more details from https://nodejs.org/api/modules.html#modules_file_modules
@@ -24,7 +24,7 @@ const extensions = ["mjs", "js", "json", "node"];
 		C Combine
 */
 const genVirtualID = (target, mode) => `\0${mode}::${target}`;
-const parseVirtualID = raw => {
+const parseVirtualID = (raw) => {
 	if (raw.startsWith("\0")) {
 		let ret = raw.slice(1).split("::");
 
@@ -45,12 +45,12 @@ export default (options = {}) => {
 		base,
 		candidateExt,
 		variables,
-		dirBehaviour
+		dirBehaviour,
 	} = checkOptions(options);
 	const filter = createFilter(include, exclude);
 
 	const { getVirtualModule, clear } = genVirtuaGrouplModuleMaker({
-		candidateExt: extensions
+		candidateExt: extensions,
 	});
 
 	return {
@@ -132,7 +132,7 @@ export default (options = {}) => {
 			} else {
 				const maybe = tryResolve(fullfp, [
 					...extensions,
-					...candidateExt
+					...candidateExt,
 				]);
 
 				if (maybe && !isDir(maybe)) return maybe;
@@ -153,7 +153,7 @@ export default (options = {}) => {
 
 				return await getVirtualModule(target, mode === "I");
 			}
-		}
+		},
 	};
 };
 
