@@ -18,6 +18,8 @@ Rollup resolve 插件。
 ## 安装
 
 ```
+yarn add --save-dev @zrlps/rollup-plugin-resolve
+or
 npm install --save-dev @zrlps/rollup-plugin-resolve
 ```
 

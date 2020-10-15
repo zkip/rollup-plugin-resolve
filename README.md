@@ -19,6 +19,8 @@ It provides the following patterns:
 ## Installation
 
 ```
+yarn add --save-dev @zrlps/rollup-plugin-resolve
+or
 npm install --save-dev @zrlps/rollup-plugin-resolve
 ```
 
