@@ -4,7 +4,7 @@
 
 简体中文 | [English](./README.md)
 
-Rollup 的 resolve 插件。
+Rollup resolve 插件。
 
 这个插件让你可以定义一个项目的起点，使得你可以拥有额外的搜寻文件的模式。
 它提供了：
