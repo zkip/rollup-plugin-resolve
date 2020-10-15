@@ -15,6 +15,9 @@ import {
 const isES6DirExport = (dirpath) =>
 	!!tryResolve(join(dirpath, "index"), ["js", "node"]);
 
+const maybeES6Export = (dirpath) =>
+	tryResolve(join(dirpath, "index"), ["js", "node"]);
+
 // more details from https://nodejs.org/api/modules.html#modules_file_modules
 const extensions = ["mjs", "js", "json", "node"];
 
@@ -109,14 +112,15 @@ export default (options = {}) => {
 					let mode = "I";
 
 					if (!isIntergration) {
+						const es6_fullfp = maybeES6Export(fullfp);
 						if (
 							dirBehaviour === "collective" ||
-							(dirBehaviour === "auto" && !isES6DirExport(fullfp))
+							(dirBehaviour === "auto" && !es6_fullfp)
 						) {
 							mode = "C";
 						} else {
 							// es6 import
-							return null;
+							return es6_fullfp;
 						}
 					}
 
