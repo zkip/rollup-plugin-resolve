@@ -5,3 +5,4 @@ dist
 coverage.lcov
 test/dist
 yarn.lock
+.npmrc
