@@ -1,6 +1,6 @@
-import { join, dirname, resolve, isAbsolute } from "path";
+import { join, dirname } from "path";
 import { createFilter } from "rollup-pluginutils";
-import { isDir, isExists, tryResolve, first } from "./util";
+import { isDir, isExists, tryResolve } from "./util";
 import checkOptions from "./checkOptions";
 
 import preConfig from "./preConfig";
