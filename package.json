@@ -16,6 +16,7 @@
 		"rollup-pluginutils": "^2.8.1"
 	},
 	"devDependencies": {
+		"@rollup/plugin-json": "^4.1.0",
 		"@rollup/plugin-node-resolve": "^6.0.0",
 		"ava": "^2.4.0",
 		"fs-extra": "^8.1.0",

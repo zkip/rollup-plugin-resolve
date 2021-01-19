@@ -1,4 +1,5 @@
 import resolve from "@rollup/plugin-node-resolve";
+import json from "@rollup/plugin-json";
 
 export default {
 	input: "src/index.js",
@@ -12,6 +13,7 @@ export default {
 		"acorn",
 	],
 	plugins: [
+		json(),
 		resolve({
 			// preferBuiltins: true,
 		}),

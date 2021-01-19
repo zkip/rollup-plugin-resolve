@@ -2,6 +2,7 @@ import { join, dirname } from "path";
 import { createFilter } from "rollup-pluginutils";
 import { isDir, isExists, tryResolve } from "./util";
 import checkOptions from "./checkOptions";
+import { name } from "../package.json";
 
 import preConfig from "./preConfig";
 import genVirtuaGrouplModuleMaker from "./genVirtualGroupModuleMaker";
@@ -57,7 +58,7 @@ export default (options = {}) => {
 	});
 
 	return {
-		name: "resolve",
+		name,
 		async resolveId(importee, importer) {
 			if (!filter(importee)) return null;
 
